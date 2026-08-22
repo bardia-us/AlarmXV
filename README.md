@@ -47,4 +47,4 @@ timeout recovery.
 
 ## Current release
 
-Version `1.1.0` (`versionCode 2`). See [CHANGELOG.md](CHANGELOG.md).
+Version `1.2.0` (`versionCode 3`). See [CHANGELOG.md](CHANGELOG.md).

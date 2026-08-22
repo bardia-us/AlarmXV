@@ -16,6 +16,7 @@ class AlarmReceiver : BroadcastReceiver() {
 
         val kind = intent.getStringExtra(extraKind) ?: "main"
         if (kind == "main") {
+            WakeFailureStore.clear(context, alarm.id)
             AlarmScheduler.cancelChallengeTimeout(context, alarm.id)
             WakeCheckScheduler.cancel(context, alarm.id)
             AlarmScheduler.scheduleNextAfterRing(context, alarm)

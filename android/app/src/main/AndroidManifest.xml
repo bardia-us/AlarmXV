@@ -44,6 +44,14 @@
             android:showWhenLocked="true"
             android:turnScreenOn="true"
             android:theme="@style/AlarmTheme" />
+        <activity
+            android:name=".WakeCheckActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:launchMode="singleTop"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:theme="@style/AlarmTheme" />
         <service
             android:name=".RingingService"
             android:exported="false"

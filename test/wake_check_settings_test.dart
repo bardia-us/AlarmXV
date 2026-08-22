@@ -37,4 +37,12 @@ void main() {
     expect(settings.confirmationTimedOut(deadline, deadline), isTrue);
     expect(settings.afterTimeout(), WakeCheckTransition.restartAlarm);
   });
+
+  test('one configured check completes after one confirmation', () {
+    const oneCheck = WakeCheckSettings(enabled: true, checkCount: 1);
+
+    expect(oneCheck.hasNextCheck(0), isTrue);
+    expect(oneCheck.afterConfirmation(1), WakeCheckTransition.complete);
+    expect(oneCheck.hasNextCheck(1), isFalse);
+  });
 }

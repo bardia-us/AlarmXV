@@ -12,6 +12,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import android.provider.Settings
 import org.json.JSONObject
 
 data class WakeCheckState(
@@ -53,6 +54,7 @@ object WakeCheckScheduler {
 
     fun startCycle(context: Context, alarm: AlarmData) {
         cancel(context, alarm.id)
+        WakeFailureStore.clear(context, alarm.id)
         if (!alarm.wakeCheckEnabled || !alarm.enabled) return
         scheduleCheck(
             context,
@@ -84,6 +86,7 @@ object WakeCheckScheduler {
             return
         }
         AlarmScheduler.scheduleWakeFailure(context, alarm, deadline)
+        showWakeCheckScreen(context, alarm, checkNumber, deadline)
     }
 
     fun confirm(context: Context, alarmId: String, checkNumber: Int) {
@@ -111,6 +114,7 @@ object WakeCheckScheduler {
         cancelCheckIntent(context, alarmId)
         notificationManager(context).cancel(notificationId(alarmId))
         WakeCheckStore.remove(context, alarmId)
+        WakeFailureStore.mark(context, alarmId)
     }
 
     fun cancel(context: Context, alarmId: String) {
@@ -156,6 +160,12 @@ object WakeCheckScheduler {
                     AlarmScheduler.scheduleWakeFailure(
                         context,
                         alarm,
+                        deadline,
+                    )
+                    showWakeCheckScreen(
+                        context,
+                        alarm,
+                        state.checkNumber,
                         deadline,
                     )
                 }
@@ -229,9 +239,7 @@ object WakeCheckScheduler {
         val contentIntent = PendingIntent.getActivity(
             context,
             0,
-            Intent(context, MainActivity::class.java).apply {
-                data = wakeUri(alarm.id, "open")
-            },
+            WakeCheckActivity.createIntent(context, alarm, checkNumber, deadline),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -291,6 +299,22 @@ object WakeCheckScheduler {
             true
         }
         return runtimeGranted && manager.areNotificationsEnabled() && channelEnabled
+    }
+
+    private fun showWakeCheckScreen(
+        context: Context,
+        alarm: AlarmData,
+        checkNumber: Int,
+        deadline: Long,
+    ) {
+        val canLaunch = Build.VERSION.SDK_INT < Build.VERSION_CODES.M ||
+            Settings.canDrawOverlays(context)
+        if (!canLaunch) return
+        runCatching {
+            context.startActivity(
+                WakeCheckActivity.createIntent(context, alarm, checkNumber, deadline),
+            )
+        }
     }
 
     private fun checkPendingIntent(
@@ -373,6 +397,31 @@ object WakeCheckStore {
         context.getSharedPreferences(preferencesName, Context.MODE_PRIVATE)
             .edit()
             .putString(statesKey, value.toString())
+            .apply()
+    }
+}
+
+object WakeFailureStore {
+    private const val preferencesName = "alarm_xv_wake_failure_session"
+
+    fun mark(context: Context, alarmId: String) {
+        context.getSharedPreferences(preferencesName, Context.MODE_PRIVATE)
+            .edit()
+            .putBoolean(alarmId, true)
+            .apply()
+    }
+
+    fun consume(context: Context, alarmId: String): Boolean {
+        val preferences = context.getSharedPreferences(preferencesName, Context.MODE_PRIVATE)
+        val marked = preferences.getBoolean(alarmId, false)
+        if (marked) preferences.edit().remove(alarmId).apply()
+        return marked
+    }
+
+    fun clear(context: Context, alarmId: String) {
+        context.getSharedPreferences(preferencesName, Context.MODE_PRIVATE)
+            .edit()
+            .remove(alarmId)
             .apply()
     }
 }

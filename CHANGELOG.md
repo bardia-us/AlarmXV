@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.0+3
+
+- Added a silent full-screen Wake-up Checker with a 60-second countdown.
+- Fixed repeated Checker cycles after solving a Checker-failure alarm.
+- Kept the Checker screen dismissible while leaving its silent notification active.
+- Moved the large ringing clock down for better system-bar spacing.
+- Added per-ABI signed Release APK outputs.
+
 ## 1.1.0+2
 
 - Added a strict Ring → Start → timed Challenge flow.

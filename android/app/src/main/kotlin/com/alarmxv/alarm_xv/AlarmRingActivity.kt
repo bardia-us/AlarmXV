@@ -218,7 +218,7 @@ class AlarmRingActivity : Activity(), SensorEventListener {
         val content = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
-            setPadding(dp(18), if (compact) dp(20) else dp(36), dp(18), dp(24))
+            setPadding(dp(18), if (compact) dp(44) else dp(64), dp(18), dp(24))
         }
 
         val clock = TextClock(this).apply {
@@ -733,7 +733,11 @@ class AlarmRingActivity : Activity(), SensorEventListener {
     private fun completeAlarm() {
         AlarmScheduler.cancelChallengeTimeout(this, alarm.id)
         RingStateStore.clear(this, alarm.id)
-        WakeCheckScheduler.startCycle(this, alarm)
+        if (WakeFailureStore.consume(this, alarm.id)) {
+            WakeCheckScheduler.cancel(this, alarm.id)
+        } else {
+            WakeCheckScheduler.startCycle(this, alarm)
+        }
         endingAlarm = true
         RingingService.stop(this)
         finishAndRemoveTask()
