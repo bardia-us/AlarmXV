@@ -15,3 +15,14 @@
 - SDK checkpoint: `flutter upgrade --verify-only` confirmed stable3.47.8 revision737ba8f885, versus installed3.47.6. User requested upgrade; command-scoped upgrade underway, both projects keep same SDK path.
 - Gradle checkpoint: Windows Java Unix domain socket path too long; command-scoped JAVA_TOOL_OPTIONS=-Djdk.net.unixdomain.tmpdir=C:\Windows\Temp fixes daemon startup. Do not change user global Java settings.
 - Next: finish Flutter+native UI, integrate What'sNew startup, run all analyzer/tests, native regression/build, private preview QA report and APK checksum/signature evidence.
+
+## Checkpoint 2 — integration and regression
+
+- Git checkpoint7283ef3 preserves additive migration, app settings and mission/update contracts (10 focused Dart tests green).
+- Native final Kotlin/resources compilation and7 JUnit tests green; cache XML confirms zero failures/errors.
+- Native fix preserves snooze/challenge PendingIntents on app resume. AlarmStore persists with checked commit before cancellations; disabled/deleted members cancel their sessions.
+- New UI initially exposed two real mismatches: unsupported wake-check timeout choices and volume-protection switch; removed unsupported controls, preserved stored fields. Checker remains60seconds.
+- Integrated UI test caught keyboard+2xtext overflow; editor title moved into scroll content, no font-size clamp.8 UI tests then passed (fresh complete suite still pending).
+- App WhatsNew once-per-installed-version test passed. GitHub updater tests reject wrong repo/encoded path escapes, compare prerelease correctly and match ABI with universal fallback.
+- Flutter3.47.8 upgrade could not finish: Google connection reset; official mirror transferred57MB then stalled on resumed chunks. Original working3.47.6 SDK restored from existing backup, stable branch restored, incomplete download and backups preserved. No claim upgrade succeeded.
+- Source review (Codex Security) completed with partial coverage, zero validated findings in reviewed controls; original snapshot unavailable warning makes it unsuitable as final-release certification.

@@ -28,6 +28,62 @@ class MainActivity : FlutterActivity() {
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "loadAlarms" -> result.success(AlarmStore.loadJson(this))
+                    "getAppInfo" -> {
+                        @Suppress("DEPRECATION")
+                        val info = packageManager.getPackageInfo(packageName, 0)
+                        val preferences = getSharedPreferences("alarm_xv_preferences", MODE_PRIVATE)
+                        result.success(mapOf(
+                            "versionName" to info.versionName.orEmpty(),
+                            "versionCode" to if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
+                                info.longVersionCode else @Suppress("DEPRECATION") info.versionCode.toLong(),
+                            "supportedAbis" to Build.SUPPORTED_ABIS.toList(),
+                            "lastSeenVersion" to preferences.getString("whats_new_seen_version", ""),
+                        ))
+                    }
+                    "markWhatsNewSeen" -> {
+                        val version = call.arguments as? String
+                        if (version.isNullOrBlank() || version.length > 100) {
+                            result.error("INVALID_VERSION", "Expected app version.", null)
+                        } else {
+                            val saved = getSharedPreferences("alarm_xv_preferences", MODE_PRIVATE)
+                                .edit().putString("whats_new_seen_version", version).commit()
+                            if (saved) result.success(null)
+                            else result.error("SAVE_FAILED", "Could not save version state.", null)
+                        }
+                    }
+                    "openExternalUrl" -> {
+                        val uri = (call.arguments as? String)?.let(Uri::parse)
+                        val path = uri?.path.orEmpty()
+                        if (uri == null || uri.scheme != "https" || uri.host != "github.com" ||
+                            uri.userInfo != null || uri.port != -1 ||
+                            uri.pathSegments.any { it == "." || it == ".." ||
+                                it.contains('/') || it.contains('\\') } ||
+                            (path != "/bardia-us/AlarmXV" && !path.startsWith("/bardia-us/AlarmXV/"))
+                        ) {
+                            result.error("INVALID_URL", "Expected the AlarmXV GitHub page.", null)
+                        } else {
+                            try {
+                                val external = Intent(Intent.ACTION_VIEW, uri)
+                                    .addCategory(Intent.CATEGORY_BROWSABLE)
+                                startActivity(external)
+                                result.success(null)
+                            } catch (_: android.content.ActivityNotFoundException) {
+                                result.error("NO_BROWSER", "No browser can open this link.", null)
+                            } catch (error: Exception) {
+                                result.error("OPEN_FAILED", error.message, null)
+                            }
+                        }
+                    }
+                    "loadAppSettings" -> result.success(AppSettingsStore.loadJson(this))
+                    "saveAppSettings" -> {
+                        try {
+                            AppSettingsStore.save(this, call.arguments as? String
+                                ?: error("Expected settings as JSON."))
+                            result.success(null)
+                        } catch (error: Exception) {
+                            result.error("SETTINGS_SAVE_FAILED", error.message, null)
+                        }
+                    }
                     "saveAndSync" -> {
                         val encoded = call.arguments as? String
                         if (encoded == null) {

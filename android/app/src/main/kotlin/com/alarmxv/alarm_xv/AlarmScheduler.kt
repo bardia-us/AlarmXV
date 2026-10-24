@@ -22,26 +22,42 @@ object AlarmScheduler {
         val previous = AlarmStore.load(context)
         val updated = AlarmData.listFromJson(encoded)
         val updatedById = updated.associateBy { it.id }
-        previous.forEach { alarm ->
-            cancelAlarmIntents(context, alarm.id)
-            if (updatedById[alarm.id] != alarm) WakeCheckScheduler.cancel(context, alarm.id)
-        }
         AlarmStore.save(context, encoded)
-        return reschedule(context)
+        return AlarmSyncPolicy.afterPersist {
+            val failures = mutableListOf<String>()
+            previous.forEach { alarm ->
+                if (AlarmSyncPolicy.cancelSession(alarm, updatedById[alarm.id])) {
+                    val cleanup = listOf<() -> Unit>(
+                        { cancelAlarmIntents(context, alarm.id) },
+                        { WakeCheckScheduler.cancel(context, alarm.id) },
+                        { RingStateStore.clear(context, alarm.id) },
+                    )
+                    cleanup.forEach { action ->
+                        try { action() } catch (error: Exception) {
+                            failures.add("Cancel alarm session: ${error.message ?: error.javaClass.simpleName}")
+                        }
+                    }
+                }
+            }
+            val result = reschedule(context)
+            result["scheduleError"]?.toString()?.let(failures::add)
+            if (failures.isEmpty()) result else result +
+                mapOf("scheduleError" to failures.joinToString("; "))
+        }
     }
 
     fun reschedule(context: Context): Map<String, Any> {
-        val alarms = AlarmStore.load(context)
-        alarms.forEach { cancelAlarmIntents(context, it.id) }
-        var scheduledCount = 0
-        if (canScheduleExact(context)) {
-            alarms.filter { it.enabled && it.weekdays.isNotEmpty() }.forEach { alarm ->
-                scheduleMain(context, alarm)
-                scheduledCount += 1
-            }
-        }
-        WakeCheckScheduler.rescheduleAll(context)
-        return permissionStatus(context) + mapOf("scheduledCount" to scheduledCount)
+        return AlarmSyncPolicy.rescheduleBestEffort(
+            alarms = AlarmStore.load(context),
+            permissions = { permissionStatus(context) },
+            cancelMain = { alarm ->
+                context.getSystemService(AlarmManager::class.java).cancel(
+                    alarmPendingIntent(context, alarm.id, mainKind, null, 0),
+                )
+            },
+            armMain = { alarm -> scheduleMain(context, alarm) },
+            syncWakeChecks = { WakeCheckScheduler.rescheduleAll(context) },
+        )
     }
 
     fun scheduleNextAfterRing(context: Context, alarm: AlarmData) {

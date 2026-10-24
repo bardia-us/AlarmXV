@@ -4,9 +4,7 @@ import android.app.Activity
 import android.app.KeyguardManager
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
 import android.graphics.Typeface
-import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -22,6 +20,7 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextClock
 import android.widget.TextView
+import android.widget.ScrollView
 
 class WakeCheckActivity : Activity() {
     private val handler = Handler(Looper.getMainLooper())
@@ -29,6 +28,7 @@ class WakeCheckActivity : Activity() {
     private var checkNumber = 1
     private var deadline = 0L
     private lateinit var countdown: TextView
+    private lateinit var appearance: NativeAppearance
 
     private val ticker = object : Runnable {
         override fun run() {
@@ -50,6 +50,7 @@ class WakeCheckActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        appearance = NativeAppearance(this)
         alarmId = intent.getStringExtra(extraAlarmId) ?: run {
             finish()
             return
@@ -126,21 +127,26 @@ class WakeCheckActivity : Activity() {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
             setPadding(dp(24), dp(28), dp(24), dp(28))
-            background = rounded(Color.rgb(26, 29, 37), 28)
+            background = appearance.shape(this@WakeCheckActivity, appearance.surface, 30)
+            appearance.elevate(this, 6f)
         }
         content.addView(TextClock(this).apply {
             format12Hour = "h:mm"
             format24Hour = "HH:mm"
-            textSize = 62f
+            textSize = 72f
             gravity = Gravity.CENTER
-            setTextColor(Color.rgb(246, 243, 252))
-            typeface = Typeface.create("sans-serif-light", Typeface.NORMAL)
+            setTextColor(appearance.text)
+            typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                setAutoSizeTextTypeUniformWithConfiguration(40, 72, 2,
+                    android.util.TypedValue.COMPLEX_UNIT_SP)
+            }
         }, linearParams())
         content.addView(TextView(this).apply {
             text = "هنوز بیداری؟"
             textSize = 28f
             gravity = Gravity.CENTER
-            setTextColor(Color.WHITE)
+            setTextColor(appearance.text)
             setTypeface(typeface, Typeface.BOLD)
         }, linearParams(top = 14))
         if (label.isNotBlank()) {
@@ -148,20 +154,20 @@ class WakeCheckActivity : Activity() {
                 text = label
                 textSize = 15f
                 gravity = Gravity.CENTER
-                setTextColor(Color.rgb(179, 178, 190))
+                setTextColor(appearance.muted)
             }, linearParams(top = 8))
         }
         content.addView(TextView(this).apply {
             text = "برای جلوگیری از زنگ دوباره، بیدار بودنت را تأیید کن."
             textSize = 16f
             gravity = Gravity.CENTER
-            setTextColor(Color.rgb(196, 188, 255))
+            setTextColor(appearance.accent)
         }, linearParams(top = 18))
         countdown = TextView(this).apply {
             text = "01:00"
             textSize = 38f
             gravity = Gravity.CENTER
-            setTextColor(Color.WHITE)
+            setTextColor(appearance.text)
             setTypeface(typeface, Typeface.BOLD)
         }
         content.addView(countdown, linearParams(top = 18))
@@ -169,21 +175,26 @@ class WakeCheckActivity : Activity() {
             text = "بیدارم"
             isAllCaps = false
             textSize = 18f
-            setTextColor(Color.WHITE)
-            background = rounded(Color.rgb(139, 128, 249), 18)
+            setTextColor(appearance.onAccent)
+            background = appearance.ripple(this@WakeCheckActivity, appearance.accent, 20)
+            appearance.elevate(this, 3f)
+            minHeight = dp(60)
+            setPadding(dp(14), dp(12), dp(14), dp(12))
             setOnClickListener { confirmAwake() }
-        }, linearParams(height = dp(60), top = 22))
+        }, linearParams(top = 22))
         content.addView(Button(this).apply {
             text = "فعلاً ببند"
             isAllCaps = false
             textSize = 14f
-            setTextColor(Color.rgb(196, 188, 255))
-            background = rounded(Color.TRANSPARENT, 18)
+            setTextColor(appearance.accent)
+            background = appearance.ripple(this@WakeCheckActivity, appearance.accentSurface, 20)
+            minHeight = dp(48)
+            setPadding(dp(14), dp(12), dp(14), dp(12))
             setOnClickListener { finishAndRemoveTask() }
-        }, linearParams(height = dp(48), top = 8))
+        }, linearParams(top = 8))
 
-        return FrameLayout(this).apply {
-            setBackgroundColor(Color.rgb(10, 12, 17))
+        val frame = FrameLayout(this).apply {
+            setBackgroundColor(appearance.background)
             addView(
                 content,
                 FrameLayout.LayoutParams(
@@ -196,11 +207,21 @@ class WakeCheckActivity : Activity() {
                 },
             )
         }
-    }
-
-    private fun rounded(color: Int, radius: Int) = GradientDrawable().apply {
-        setColor(color)
-        cornerRadius = dp(radius).toFloat()
+        return ScrollView(this).apply {
+            isFillViewport = true
+            setBackgroundColor(appearance.background)
+            setPadding(0, dp(28), 0, dp(28))
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                setOnApplyWindowInsetsListener { view, insets ->
+                    val safe = insets.getInsetsIgnoringVisibility(
+                        WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout())
+                    view.setPadding(safe.left, safe.top + dp(20), safe.right, safe.bottom + dp(20))
+                    insets
+                }
+            }
+            addView(frame, FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT))
+        }
     }
 
     private fun linearParams(

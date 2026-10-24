@@ -34,15 +34,18 @@ class AlarmSyncResult {
   const AlarmSyncResult({
     required this.scheduledCount,
     required this.permissions,
+    this.scheduleError,
   });
 
   final int scheduledCount;
   final AlarmPermissionStatus permissions;
+  final String? scheduleError;
 
   factory AlarmSyncResult.fromMap(Map<Object?, Object?> map) {
     return AlarmSyncResult(
       scheduledCount: map['scheduledCount'] as int? ?? 0,
       permissions: AlarmPermissionStatus.fromMap(map),
+      scheduleError: map['scheduleError'] as String?,
     );
   }
 }
@@ -67,12 +70,13 @@ class AlarmStorage {
   static const _channel = MethodChannel('alarm_xv/alarm_manager');
 
   Future<AppSettings> loadAppSettings() async {
-    final encoded = await _channel.invokeMethod<String>('loadAppSettings') ?? '{}';
+    final encoded =
+        await _channel.invokeMethod<String>('loadAppSettings') ?? '{}';
     return AppSettings.fromJson(jsonDecode(encoded) as Map<String, dynamic>);
   }
 
-  Future<void> saveAppSettings(AppSettings settings) =>
-    _channel.invokeMethod<void>('saveAppSettings', jsonEncode(settings.toJson()));
+  Future<void> saveAppSettings(AppSettings settings) => _channel
+      .invokeMethod<void>('saveAppSettings', jsonEncode(settings.toJson()));
 
   Future<List<Alarm>> load() async {
     final encoded = await _channel.invokeMethod<String>('loadAlarms') ?? '[]';

@@ -41,8 +41,15 @@ class Alarm {
   DateTime? nextOccurrence(DateTime after) {
     if (!isEnabled || weekdays.isEmpty) return null;
     for (var offset = 0; offset <= 7; offset++) {
-      final candidate = DateTime(after.year, after.month, after.day + offset, hour, minute);
-      if (weekdays.contains(candidate.weekday) && candidate.isAfter(after)) return candidate;
+      final candidate = DateTime(
+        after.year,
+        after.month,
+        after.day + offset,
+        hour,
+        minute,
+      );
+      if (weekdays.contains(candidate.weekday) && candidate.isAfter(after))
+        return candidate;
     }
     return null;
   }
@@ -141,8 +148,12 @@ class Alarm {
       wakeCheck: WakeCheckSettings.fromJson(
         json['wakeCheck'] as Map<String, dynamic>?,
       ),
-      groupId: (json['groupId'] as String?)?.isNotEmpty == true ? json['groupId'] as String : null,
-      missionSettings: MissionSettings.fromJson(json['missionSettings'] as Map<String, dynamic>?),
+      groupId: (json['groupId'] as String?)?.isNotEmpty == true
+          ? json['groupId'] as String
+          : null,
+      missionSettings: MissionSettings.fromJson(
+        json['missionSettings'] as Map<String, dynamic>?,
+      ),
     );
   }
 }

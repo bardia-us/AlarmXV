@@ -202,23 +202,24 @@ class RingingService : Service() {
         ) return
         val alarm = currentAlarm ?: return
         val windowManager = getSystemService(WindowManager::class.java)
+        val appearance = NativeAppearance(this)
         val content = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
             setPadding(dp(28), dp(28), dp(28), dp(28))
-            setBackgroundColor(Color.rgb(10, 12, 17))
+            setBackgroundColor(appearance.background)
             addView(TextClock(this@RingingService).apply {
                 format12Hour = "h:mm"
                 format24Hour = "HH:mm"
                 textSize = 76f
-                setTextColor(Color.WHITE)
+                setTextColor(appearance.text)
                 gravity = Gravity.CENTER
-                typeface = Typeface.create("sans-serif-light", Typeface.NORMAL)
+                typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
             })
             addView(TextView(this@RingingService).apply {
                 text = alarm.label
                 textSize = 24f
-                setTextColor(Color.WHITE)
+                setTextColor(appearance.text)
                 gravity = Gravity.CENTER
                 setTypeface(typeface, Typeface.BOLD)
             }, LinearLayout.LayoutParams(
@@ -232,7 +233,7 @@ class RingingService : Service() {
                     "Alarm is ringing"
                 }
                 textSize = 16f
-                setTextColor(Color.rgb(196, 188, 255))
+                setTextColor(appearance.accent)
                 gravity = Gravity.CENTER
             }, LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -242,6 +243,9 @@ class RingingService : Service() {
                 text = "Return to alarm"
                 isAllCaps = false
                 textSize = 18f
+                setTextColor(appearance.onAccent)
+                background = appearance.ripple(this@RingingService, appearance.accent)
+                appearance.elevate(this)
                 setOnClickListener { launchAlarmActivity() }
             }, LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,

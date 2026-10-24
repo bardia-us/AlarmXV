@@ -8,8 +8,12 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   Map<String, dynamic> legacy() => {
-    'id': 'v12', 'hour': 7, 'minute': 30, 'weekdays': [1, 5],
-    'isEnabled': true, 'alarmSoundUri': 'content://alarm/42',
+    'id': 'v12',
+    'hour': 7,
+    'minute': 30,
+    'weekdays': [1, 5],
+    'isEnabled': true,
+    'alarmSoundUri': 'content://alarm/42',
     'wakeCheck': {'enabled': true, 'checkCount': 1, 'delayMinutes': 3},
   };
 
@@ -20,18 +24,28 @@ void main() {
     expect(alarm.missionSettings.mathQuestions, 3);
     expect(alarm.alarmSoundUri, 'content://alarm/42');
     expect(alarm.wakeCheck.checkCount, 1);
-    expect(alarm.nextOccurrence(DateTime(2026, 10, 26, 7, 29)),
-        DateTime(2026, 10, 26, 7, 30));
+    expect(
+      alarm.nextOccurrence(DateTime(2026, 10, 26, 7, 29)),
+      DateTime(2026, 10, 26, 7, 30),
+    );
   });
 
   test('extended alarm settings and ordered missions round trip', () {
     final alarm = Alarm.fromJson(legacy()).copyWith(
       groupId: 'work',
-      challenges: {ChallengeType.typing, ChallengeType.math, ChallengeType.order},
+      challenges: {
+        ChallengeType.typing,
+        ChallengeType.math,
+        ChallengeType.order,
+      },
       missionSettings: const MissionSettings(
-        mathDifficulty: 'custom', mathOperations: {'multiply', 'divide'},
-        mathQuestions: 8, memoryRounds: 3, shakeCount: 24,
-        typingPhrase: 'صبح بخیر', numberCount: 8,
+        mathDifficulty: 'custom',
+        mathOperations: {'multiply', 'divide'},
+        mathQuestions: 8,
+        memoryRounds: 3,
+        shakeCount: 24,
+        typingPhrase: 'صبح بخیر',
+        numberCount: 8,
       ),
     );
     final restored = Alarm.fromJson(alarm.toJson());
@@ -43,21 +57,46 @@ void main() {
     expect(restored.id, 'v12');
   });
 
+  test('v1.2 memory and shake difficulty survives the first upgrade', () {
+    final old = Alarm.fromJson({
+      ...legacy(),
+      'challenges': ['memory', 'shake'],
+    });
+    expect(old.missionSettings.memoryGridSize, 4);
+    expect(old.missionSettings.memoryTargets, 5);
+    expect(old.missionSettings.shakeCount, 10);
+    expect(Alarm.fromJson(old.toJson()).missionSettings.memoryTargets, 5);
+    expect(const MissionSettings().memoryGridSize, 3);
+    expect(const MissionSettings().shakeCount, 12);
+  });
+
   test('next occurrence rolls across week and excludes past minute', () {
     final alarm = Alarm.fromJson(legacy());
-    expect(alarm.nextOccurrence(DateTime(2026, 10, 26, 7, 30)),
-        DateTime(2026, 10, 30, 7, 30));
-    expect(alarm.copyWith(isEnabled: false).nextOccurrence(DateTime.now()), isNull);
+    expect(
+      alarm.nextOccurrence(DateTime(2026, 10, 26, 7, 30)),
+      DateTime(2026, 10, 30, 7, 30),
+    );
+    expect(
+      alarm.copyWith(isEnabled: false).nextOccurrence(DateTime.now()),
+      isNull,
+    );
     expect(alarm.copyWith(weekdays: {}).nextOccurrence(DateTime.now()), isNull);
-    expect(alarm.nextOccurrence(DateTime(2026, 10, 30, 8)),
-        DateTime(2026, 11, 2, 7, 30));
+    expect(
+      alarm.nextOccurrence(DateTime(2026, 10, 30, 8)),
+      DateTime(2026, 11, 2, 7, 30),
+    );
   });
 
   test('malformed mission limits normalize to solvable values', () {
     final settings = MissionSettings.fromJson({
-      'mathQuestions': 100, 'mathOperations': ['unknown'],
-      'memoryGridSize': 3, 'memoryTargets': 900, 'memoryRounds': -1,
-      'shakeThreshold': 0.0, 'typingPhrase': ' ', 'numberCount': 900,
+      'mathQuestions': 100,
+      'mathOperations': ['unknown'],
+      'memoryGridSize': 3,
+      'memoryTargets': 900,
+      'memoryRounds': -1,
+      'shakeThreshold': 0.0,
+      'typingPhrase': ' ',
+      'numberCount': 900,
     });
     expect(settings.mathQuestions, 20);
     expect(settings.mathOperations, {'add', 'subtract'});
@@ -70,15 +109,26 @@ void main() {
 
   test('settings persist theme and groups with safe legacy defaults', () {
     const settings = AppSettings(
-      themeMode: ThemeMode.light, accent: AccentPalette.emerald,
-      groups: [AlarmGroup(id: 'school', name: 'مدرسه', color: 0xff12ab89,
-        icon: 'school', sortOrder: 2)],
+      themeMode: ThemeMode.light,
+      accent: AccentPalette.emerald,
+      groups: [
+        AlarmGroup(
+          id: 'school',
+          name: 'مدرسه',
+          color: 0xff12ab89,
+          icon: 'school',
+          sortOrder: 2,
+        ),
+      ],
       defaultSnoozeMinutes: 10,
     );
     final restored = AppSettings.fromJson(settings.toJson());
     expect(restored.toJson(), settings.toJson());
     expect(AppSettings.fromJson({}).themeMode, ThemeMode.system);
-    expect(AppSettings.fromJson({'accent': 'missing'}).accent, AccentPalette.ocean);
+    expect(
+      AppSettings.fromJson({'accent': 'missing'}).accent,
+      AccentPalette.ocean,
+    );
     expect(restored.groups.single.name, 'مدرسه');
   });
 }

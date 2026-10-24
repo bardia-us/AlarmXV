@@ -52,9 +52,18 @@ android {
         release {
             signingConfig = signingConfigs.getByName("release")
         }
+        getByName("profile") {
+            // Device profiling must upgrade the installed app without deleting its alarms.
+            signingConfig = signingConfigs.getByName("release")
+        }
     }
 }
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.json:json:20250517")
 }

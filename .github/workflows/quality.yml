@@ -1,0 +1,27 @@
+name: Quality checks
+on:
+  pull_request:
+  push:
+    branches: [main, 'redesign/**']
+permissions:
+  contents: read
+jobs:
+  flutter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.6'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+      - name: Android unit tests
+        working-directory: android
+        run: ./gradlew :app:testDebugUnitTest

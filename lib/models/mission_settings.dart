@@ -1,4 +1,4 @@
-/// Additive mission configuration; absent fields reproduce v1.2 behavior.
+/// Missing configuration migrates v1.2; partial v2 fields use safe v2 defaults.
 class MissionSettings {
   const MissionSettings({
     this.mathDifficulty = 'medium',
@@ -27,10 +27,17 @@ class MissionSettings {
   final int numberCount;
 
   MissionSettings copyWith({
-    String? mathDifficulty, int? mathQuestions, Set<String>? mathOperations,
-    int? mathMaxOperand, int? memoryGridSize, int? memoryTargets,
-    int? memoryRounds, int? shakeCount, double? shakeThreshold,
-    String? typingPhrase, int? numberCount,
+    String? mathDifficulty,
+    int? mathQuestions,
+    Set<String>? mathOperations,
+    int? mathMaxOperand,
+    int? memoryGridSize,
+    int? memoryTargets,
+    int? memoryRounds,
+    int? shakeCount,
+    double? shakeThreshold,
+    String? typingPhrase,
+    int? numberCount,
   }) => MissionSettings.fromJson({
     ...toJson(),
     if (mathDifficulty != null) 'mathDifficulty': mathDifficulty,
@@ -47,35 +54,55 @@ class MissionSettings {
   });
 
   Map<String, Object> toJson() => {
-    'mathDifficulty': mathDifficulty, 'mathQuestions': mathQuestions,
-    'mathOperations': mathOperations.toList(), 'mathMaxOperand': mathMaxOperand,
-    'memoryGridSize': memoryGridSize, 'memoryTargets': memoryTargets,
-    'memoryRounds': memoryRounds, 'shakeCount': shakeCount,
-    'shakeThreshold': shakeThreshold, 'typingPhrase': typingPhrase,
+    'mathDifficulty': mathDifficulty,
+    'mathQuestions': mathQuestions,
+    'mathOperations': mathOperations.toList(),
+    'mathMaxOperand': mathMaxOperand,
+    'memoryGridSize': memoryGridSize,
+    'memoryTargets': memoryTargets,
+    'memoryRounds': memoryRounds,
+    'shakeCount': shakeCount,
+    'shakeThreshold': shakeThreshold,
+    'typingPhrase': typingPhrase,
     'numberCount': numberCount,
   };
 
   factory MissionSettings.fromJson(Map<String, dynamic>? json) {
-    if (json == null) return const MissionSettings();
+    if (json == null) {
+      return const MissionSettings(
+        memoryGridSize: 4,
+        memoryTargets: 5,
+        shakeCount: 10,
+      );
+    }
     int bounded(String key, int fallback, int low, int high) =>
-      ((json[key] as num?)?.toInt() ?? fallback).clamp(low, high);
+        ((json[key] as num?)?.toInt() ?? fallback).clamp(low, high);
     final difficulty = json['mathDifficulty'] as String? ?? 'medium';
     final grid = bounded('memoryGridSize', 3, 3, 5);
-    final operations = (json['mathOperations'] as List<dynamic>? ?? ['add', 'subtract'])
-      .whereType<String>().where({'add', 'subtract', 'multiply', 'divide'}.contains).toSet();
+    final operations =
+        (json['mathOperations'] as List<dynamic>? ?? ['add', 'subtract'])
+            .whereType<String>()
+            .where({'add', 'subtract', 'multiply', 'divide'}.contains)
+            .toSet();
     final phrase = (json['typingPhrase'] as String? ?? '').trim();
     final threshold = (json['shakeThreshold'] as num?)?.toDouble() ?? 2.4;
     return MissionSettings(
-      mathDifficulty: {'easy', 'medium', 'hard', 'custom'}.contains(difficulty) ? difficulty : 'medium',
+      mathDifficulty: {'easy', 'medium', 'hard', 'custom'}.contains(difficulty)
+          ? difficulty
+          : 'medium',
       mathQuestions: bounded('mathQuestions', 3, 1, 20),
-      mathOperations: Set.unmodifiable(operations.isEmpty ? {'add', 'subtract'} : operations),
+      mathOperations: Set.unmodifiable(
+        operations.isEmpty ? {'add', 'subtract'} : operations,
+      ),
       mathMaxOperand: bounded('mathMaxOperand', 90, 5, 999),
       memoryGridSize: grid,
       memoryTargets: bounded('memoryTargets', 3, 1, grid * grid - 1),
       memoryRounds: bounded('memoryRounds', 1, 1, 10),
       shakeCount: bounded('shakeCount', 12, 3, 100),
       shakeThreshold: threshold.isFinite ? threshold.clamp(1.5, 4.0) : 2.4,
-      typingPhrase: phrase.isEmpty ? 'I am awake and ready' : phrase.substring(0, phrase.length.clamp(0, 120)),
+      typingPhrase: phrase.isEmpty
+          ? 'I am awake and ready'
+          : phrase.substring(0, phrase.length.clamp(0, 120)),
       numberCount: bounded('numberCount', 6, 4, 12),
     );
   }

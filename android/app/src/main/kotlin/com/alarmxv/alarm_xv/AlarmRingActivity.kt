@@ -1,13 +1,12 @@
 package com.alarmxv.alarm_xv
 
 import android.app.Activity
+import android.animation.ValueAnimator
 import android.app.KeyguardManager
 import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
-import android.graphics.Color
 import android.graphics.Typeface
-import android.graphics.drawable.GradientDrawable
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -22,6 +21,7 @@ import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.view.WindowManager
 import android.widget.Button
+import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.GridLayout
 import android.widget.LinearLayout
@@ -30,6 +30,9 @@ import android.widget.ScrollView
 import android.widget.TextClock
 import android.widget.TextView
 import android.widget.Toast
+import android.text.Editable
+import android.text.TextWatcher
+import android.text.InputType
 import org.json.JSONArray
 import org.json.JSONObject
 import kotlin.math.min
@@ -39,6 +42,25 @@ import kotlin.random.Random
 class AlarmRingActivity : Activity(), SensorEventListener {
     private val handler = Handler(Looper.getMainLooper())
     private val mathGenerator = MathProblemGenerator()
+    private val motionEnabled get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        ValueAnimator.areAnimatorsEnabled()
+    } else android.provider.Settings.Global.getFloat(contentResolver,
+        android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 1f) > 0f
+    private lateinit var appearance: NativeAppearance
+    private val colorBackground get() = appearance.background
+    private val colorCard get() = appearance.surface
+    private val colorCardRaised get() = appearance.raised
+    private val colorInput get() = appearance.raised
+    private val colorTile get() = appearance.tile
+    private val colorTrack get() = appearance.tile
+    private val colorPrimary get() = appearance.accent
+    private val colorPrimaryDark get() = appearance.accentSurface
+    private val colorPrimarySoft get() = appearance.accent
+    private val colorText get() = appearance.text
+    private val colorMuted get() = appearance.muted
+    private val colorDanger get() = appearance.danger
+    private val colorDangerDim get() = appearance.accentSurface
+    private val colorSuccess get() = appearance.success
 
     private lateinit var alarm: AlarmData
     private var snoozeCount = 0
@@ -77,6 +99,12 @@ class AlarmRingActivity : Activity(), SensorEventListener {
     private val memoryTargets = mutableSetOf<Int>()
     private val memorySelected = mutableSetOf<Int>()
     private var memoryToken = 0
+    private var memoryRoundsSolved = 0
+    private var typingInput = ""
+    private var orderNumbers = listOf<Int>()
+    private var orderSelected = 0
+    private var shakeFallback = false
+    private var sensorReceived = false
 
     private lateinit var sensorManager: SensorManager
     private var accelerometer: Sensor? = null
@@ -89,12 +117,13 @@ class AlarmRingActivity : Activity(), SensorEventListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        appearance = NativeAppearance(this)
         configureLockScreen()
         alarm = AlarmData.fromJson(
             JSONObject(intent.getStringExtra(extraAlarmJson) ?: error("Missing alarm")),
         )
         snoozeCount = intent.getIntExtra(extraSnoozeCount, 0)
-        challengeOrder = listOf("math", "memory", "shake").filter { it in alarm.challenges }
+        challengeOrder = alarm.challenges.toList()
         if (challengeOrder.isEmpty()) challengeOrder = listOf("math")
 
         sensorManager = getSystemService(SensorManager::class.java)
@@ -218,7 +247,7 @@ class AlarmRingActivity : Activity(), SensorEventListener {
         val content = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
-            setPadding(dp(18), if (compact) dp(44) else dp(64), dp(18), dp(24))
+            setPadding(dp(18), if (compact) dp(22) else dp(34), dp(18), dp(28))
         }
 
         val clock = TextClock(this).apply {
@@ -227,8 +256,12 @@ class AlarmRingActivity : Activity(), SensorEventListener {
             textSize = if (compact) 68f else 82f
             setTextColor(colorText)
             gravity = Gravity.CENTER
-            typeface = Typeface.create("sans-serif-light", Typeface.NORMAL)
+            typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
             includeFontPadding = false
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                setAutoSizeTextTypeUniformWithConfiguration(48, if (compact) 76 else 88, 2,
+                    android.util.TypedValue.COMPLEX_UNIT_SP)
+            }
         }
         content.addView(clock, linearParams())
         content.addView(textView(alarm.label, 24f, colorText, Typeface.BOLD).apply {
@@ -263,6 +296,7 @@ class AlarmRingActivity : Activity(), SensorEventListener {
             gravity = Gravity.CENTER_HORIZONTAL
             setPadding(dp(20), dp(22), dp(20), dp(22))
             background = roundedBackground(colorCard, 26)
+            appearance.elevate(this, 5f)
         }
         content.addView(challengeContainer, linearParams(top = 16))
 
@@ -272,18 +306,18 @@ class AlarmRingActivity : Activity(), SensorEventListener {
             setPadding(dp(16), dp(14), dp(16), dp(16))
             background = roundedBackground(colorCardRaised, 20)
         }
-        snoozeCard.addView(textView("SNOOZE", 12f, colorMuted, Typeface.BOLD).apply {
+        snoozeCard.addView(textView("چرت کوتاه", 12f, colorMuted, Typeface.BOLD).apply {
             letterSpacing = 0.16f
             gravity = Gravity.CENTER
         }, linearParams())
         snoozeButton = secondaryButton().apply {
-            text = "Snooze ${alarm.snoozeMinutes} minutes"
+            text = "چرت ${alarm.snoozeMinutes} دقیقه‌ای"
             visibility = if (
                 alarm.snoozeMinutes > 0 && snoozeCount < alarm.maxSnoozes
             ) View.VISIBLE else View.GONE
             setOnClickListener { snooze() }
         }
-        snoozeCard.addView(snoozeButton, linearParams(height = dp(54), top = 10))
+        snoozeCard.addView(snoozeButton, linearParams(top = 10))
         snoozeCard.visibility = snoozeButton.visibility
         content.addView(snoozeCard, linearParams(top = 18))
 
@@ -302,6 +336,18 @@ class AlarmRingActivity : Activity(), SensorEventListener {
             isFillViewport = true
             overScrollMode = View.OVER_SCROLL_NEVER
             setBackgroundColor(colorBackground)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                setOnApplyWindowInsetsListener { view, insets ->
+                    val safe = insets.getInsetsIgnoringVisibility(
+                        WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout())
+                    val keyboard = insets.getInsets(WindowInsets.Type.ime())
+                    view.setPadding(safe.left, safe.top, safe.right, maxOf(safe.bottom, keyboard.bottom))
+                    insets
+                }
+            } else {
+                fitsSystemWindows = true
+                setPadding(0, dp(24), 0, dp(24))
+            }
             addView(
                 frame,
                 FrameLayout.LayoutParams(
@@ -330,10 +376,10 @@ class AlarmRingActivity : Activity(), SensorEventListener {
         ) View.VISIBLE else View.GONE
         challengeContainer.removeAllViews()
         challengeContainer.addView(primaryButton().apply {
-            text = "Start"
+            text = "شروع مأموریت"
             textSize = 20f
             setOnClickListener { beginChallenges() }
-        }, linearParams(height = dp(64)))
+        }, linearParams())
         persistState()
     }
 
@@ -356,12 +402,23 @@ class AlarmRingActivity : Activity(), SensorEventListener {
         }
         ringPhase = phaseChallenge
         currentChallenge = challengeOrder[challengeIndex]
+        if (currentChallenge == "shake" && (shakeFallback || accelerometer == null)) {
+            shakeFallback = true
+            currentChallenge = "math"
+        }
         challengeBadge.visibility = View.VISIBLE
         challengeProgressText.visibility = View.VISIBLE
         overallProgress.visibility = View.VISIBLE
         snoozeCard.visibility = View.GONE
-        challengeBadge.text = currentChallenge.uppercase()
-        overallProgress.progress = challengeIndex + 1
+        challengeBadge.text = when (currentChallenge) {
+            "math" -> "ریاضی"
+            "memory" -> "حافظه"
+            "shake" -> "تکان دادن"
+            "typing" -> "تایپ عبارت"
+            "order" -> "ترتیب اعداد"
+            else -> currentChallenge
+        }
+        overallProgress.progress = challengeIndex
         if (!resumeDeadline || challengeDeadlineMillis <= System.currentTimeMillis()) {
             challengeDeadlineMillis = System.currentTimeMillis() + challengeDurationMillis()
         }
@@ -377,6 +434,8 @@ class AlarmRingActivity : Activity(), SensorEventListener {
             "math" -> showMathChallenge()
             "memory" -> showMemoryChallenge()
             "shake" -> showShakeChallenge()
+            "typing" -> showTypingChallenge()
+            "order" -> showOrderChallenge()
         }
         persistState()
         handler.post(challengeCountdown)
@@ -387,14 +446,25 @@ class AlarmRingActivity : Activity(), SensorEventListener {
         memoryPhase = ""
         memoryTargets.clear()
         memorySelected.clear()
+        memoryRoundsSolved = 0
+        mathSolved = 0
+        mathProblem = null
+        mathInput = ""
+        shakeCount = 0
+        shakeFallback = false
+        typingInput = ""
+        orderNumbers = emptyList()
+        orderSelected = 0
         challengeDeadlineMillis = 0L
         showCurrentChallenge(resumeDeadline = false)
     }
 
     private fun challengeDurationMillis(): Long = when (currentChallenge) {
-        "math" -> 90_000L
-        "memory" -> 75_000L
-        "shake" -> 60_000L
+        "math" -> maxOf(90_000L, alarm.missionSettings.mathQuestions * 30_000L)
+        "memory" -> maxOf(75_000L, alarm.missionSettings.memoryRounds * 35_000L)
+        "shake" -> maxOf(60_000L, alarm.missionSettings.shakeCount * 2_000L)
+        "typing" -> 120_000L
+        "order" -> 90_000L
         else -> 60_000L
     }
 
@@ -428,10 +498,18 @@ class AlarmRingActivity : Activity(), SensorEventListener {
         memoryToken += 1
         shakeCount = 0
         lastShakeAt = 0L
+        memoryRoundsSolved = 0
+        typingInput = ""
+        orderNumbers = emptyList()
+        orderSelected = 0
+        shakeFallback = false
     }
 
     private fun showMathChallenge() {
-        if (mathProblem == null) mathProblem = mathGenerator.next()
+        if (mathProblem == null) mathProblem = mathGenerator.next(settings = alarm.missionSettings)
+        if (shakeFallback) challengeContainer.addView(textView(
+            "Motion sensor unavailable · solve math instead", 14f, colorMuted, Typeface.NORMAL
+        ).apply { gravity = Gravity.CENTER }, linearParams(top = 8))
         val question = textView("", 46f, colorText, Typeface.BOLD).apply {
             gravity = Gravity.CENTER
             includeFontPadding = false
@@ -452,9 +530,10 @@ class AlarmRingActivity : Activity(), SensorEventListener {
 
         fun render() {
             val problem = mathProblem ?: return
-            question.text = "${problem.left} ${if (problem.addition) "+" else "−"} ${problem.right}"
+            question.text = "${problem.left} ${problem.symbol} ${problem.right}"
             answer.text = mathInput.ifEmpty { "—" }
-            remaining.text = "${3 - mathSolved} correct answer${if (3 - mathSolved == 1) "" else "s"} remaining"
+            val count = alarm.missionSettings.mathQuestions - mathSolved
+            remaining.text = "$count correct answer${if (count == 1) "" else "s"} remaining"
         }
 
         val keypad = GridLayout(this).apply {
@@ -472,19 +551,19 @@ class AlarmRingActivity : Activity(), SensorEventListener {
                             if (correct) {
                                 mathSolved += 1
                                 mathInput = ""
-                                if (mathSolved >= 3) {
+                                if (mathSolved >= alarm.missionSettings.mathQuestions) {
                                     nextChallenge()
                                     return@setOnClickListener
                                 }
                                 val previous = mathProblem?.key
-                                mathProblem = mathGenerator.next(previous)
+                                mathProblem = mathGenerator.next(previous, alarm.missionSettings)
                                 feedback.text = "Correct"
                                 feedback.setTextColor(colorSuccess)
                             } else {
                                 feedback.text = "Try again"
                                 feedback.setTextColor(colorDanger)
                                 mathInput = ""
-                                answer.animate().translationX(dp(10).toFloat()).setDuration(70)
+                                if (motionEnabled) answer.animate().translationX(dp(10).toFloat()).setDuration(70)
                                     .withEndAction {
                                         answer.animate().translationX(-dp(10).toFloat()).setDuration(70)
                                             .withEndAction {
@@ -493,7 +572,7 @@ class AlarmRingActivity : Activity(), SensorEventListener {
                                     }.start()
                             }
                         }
-                        else -> if (mathInput.length < 4) mathInput += key
+                        else -> if (mathInput.length < 7) mathInput += key
                     }
                     render()
                     persistState()
@@ -510,6 +589,9 @@ class AlarmRingActivity : Activity(), SensorEventListener {
     }
 
     private fun showMemoryChallenge() {
+        val settings = alarm.missionSettings
+        val gridSize = settings.memoryGridSize
+        val targetCount = settings.memoryTargets
         val instruction = textView("", 17f, colorText, Typeface.BOLD).apply {
             gravity = Gravity.CENTER
         }
@@ -518,8 +600,8 @@ class AlarmRingActivity : Activity(), SensorEventListener {
             minHeight = dp(70)
         }
         val grid = GridLayout(this).apply {
-            columnCount = 4
-            rowCount = 4
+            columnCount = gridSize
+            rowCount = gridSize
         }
         val cells = mutableListOf<TextView>()
         val confirm = primaryButton().apply {
@@ -535,7 +617,7 @@ class AlarmRingActivity : Activity(), SensorEventListener {
 
         fun updateCells(revealing: Boolean, enabled: Boolean) {
             cells.forEachIndexed { index, cell ->
-                cell.background = roundedBackground(cellColor(index, revealing), 14)
+                cell.background = appearance.ripple(this, cellColor(index, revealing), 14)
                 cell.isEnabled = enabled
                 cell.text = if (!revealing && index in memorySelected) "✓" else ""
                 cell.alpha = if (revealing && index !in memoryTargets) 0.62f else 1f
@@ -543,7 +625,7 @@ class AlarmRingActivity : Activity(), SensorEventListener {
             confirm.isEnabled = enabled
         }
 
-        repeat(16) { index ->
+        repeat(gridSize * gridSize) { index ->
             val cell = TextView(this).apply {
                 gravity = Gravity.CENTER
                 textSize = 20f
@@ -552,22 +634,24 @@ class AlarmRingActivity : Activity(), SensorEventListener {
                     if (memoryPhase != "selecting") return@setOnClickListener
                     if (index in memorySelected) {
                         memorySelected.remove(index)
-                    } else if (memorySelected.size < 5) {
+                    } else if (memorySelected.size < targetCount) {
                         memorySelected.add(index)
                     }
                     updateCells(revealing = false, enabled = true)
-                    instruction.text = "${memorySelected.size} / 5 selected"
+                    instruction.text = "${memorySelected.size} / $targetCount selected"
                     persistState()
                 }
             }
             cells.add(cell)
-            grid.addView(cell, gridParams(index, columns = 4, size = 62))
+            val available = resources.configuration.screenWidthDp - 108
+            grid.addView(cell, gridParams(index, columns = gridSize,
+                size = min(62, available / gridSize - 8).coerceAtLeast(28)))
         }
 
         fun enterSelection() {
             memoryPhase = "selecting"
             countdown.text = ""
-            instruction.text = "Select the 5 highlighted tiles"
+            instruction.text = "Select the $targetCount highlighted tiles\nRound ${memoryRoundsSolved + 1} / ${settings.memoryRounds}"
             updateCells(revealing = false, enabled = true)
             persistState()
         }
@@ -579,12 +663,14 @@ class AlarmRingActivity : Activity(), SensorEventListener {
             instruction.text = "Remember this pattern"
             updateCells(revealing = true, enabled = false)
             cells.filterIndexed { index, _ -> index in memoryTargets }.forEach { cell ->
-                cell.scaleX = 0.86f
-                cell.scaleY = 0.86f
-                cell.animate().scaleX(1f).scaleY(1f).setDuration(220).start()
+                if (motionEnabled) {
+                    cell.scaleX = 0.86f
+                    cell.scaleY = 0.86f
+                    cell.animate().scaleX(1f).scaleY(1f).setDuration(220).start()
+                }
             }
             persistState()
-            handler.postDelayed({ enterSelection() }, 1_450)
+            handler.postDelayed({ if (token == memoryToken) enterSelection() }, 1_800)
         }
 
         fun runCountdown(token: Int, value: Int) {
@@ -596,19 +682,22 @@ class AlarmRingActivity : Activity(), SensorEventListener {
             memoryPhase = "countdown"
             instruction.text = "Get ready"
             countdown.text = value.toString()
-            countdown.alpha = 0f
-            countdown.scaleX = 1.35f
-            countdown.scaleY = 1.35f
-            countdown.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(260).start()
+            if (motionEnabled) {
+                countdown.alpha = 0f
+                countdown.scaleX = 1.35f
+                countdown.scaleY = 1.35f
+                countdown.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(260).start()
+            }
             handler.postDelayed({ runCountdown(token, value - 1) }, 720)
         }
 
         fun startNewRound(message: String? = null) {
             memoryToken += 1
             val token = memoryToken
+            memoryPhase = "countdown"
             memoryTargets.clear()
             memorySelected.clear()
-            while (memoryTargets.size < 5) memoryTargets.add(Random.nextInt(0, 16))
+            while (memoryTargets.size < targetCount) memoryTargets.add(Random.nextInt(gridSize * gridSize))
             updateCells(revealing = false, enabled = false)
             instruction.text = message ?: "Get ready"
             persistState()
@@ -617,7 +706,9 @@ class AlarmRingActivity : Activity(), SensorEventListener {
 
         confirm.setOnClickListener {
             if (memorySelected == memoryTargets) {
-                nextChallenge()
+                memoryRoundsSolved += 1
+                if (memoryRoundsSolved >= settings.memoryRounds) nextChallenge()
+                else startNewRound("Correct · next round")
             } else {
                 startNewRound("New pattern — try again")
             }
@@ -626,9 +717,9 @@ class AlarmRingActivity : Activity(), SensorEventListener {
         challengeContainer.addView(instruction, linearParams())
         challengeContainer.addView(countdown, linearParams(top = 4))
         challengeContainer.addView(grid, linearParams(top = 8))
-        challengeContainer.addView(confirm, linearParams(height = dp(54), top = 16))
+        challengeContainer.addView(confirm, linearParams(top = 16))
 
-        if (memoryPhase == "selecting" && memoryTargets.size == 5) {
+        if (memoryPhase == "selecting" && memoryTargets.size == targetCount) {
             enterSelection()
         } else {
             startNewRound()
@@ -644,7 +735,7 @@ class AlarmRingActivity : Activity(), SensorEventListener {
             gravity = Gravity.CENTER
         }, linearParams())
         challengeContainer.addView(icon, linearParams(top = 10))
-        shakeCountText = textView("$shakeCount / 10", 36f, colorText, Typeface.BOLD).apply {
+        shakeCountText = textView("$shakeCount / ${alarm.missionSettings.shakeCount}", 36f, colorText, Typeface.BOLD).apply {
             gravity = Gravity.CENTER
         }
         challengeContainer.addView(shakeCountText, linearParams(top = 2))
@@ -653,68 +744,163 @@ class AlarmRingActivity : Activity(), SensorEventListener {
             null,
             android.R.attr.progressBarStyleHorizontal,
         ).apply {
-            max = 10
+            max = alarm.missionSettings.shakeCount
             progress = shakeCount
             progressTintList = ColorStateList.valueOf(colorPrimary)
             progressBackgroundTintList = ColorStateList.valueOf(colorTrack)
         }
         challengeContainer.addView(shakeProgress, linearParams(height = dp(8), top = 14))
         shakeRemainingText = textView(
-            "${10 - shakeCount} remaining",
+            "${alarm.missionSettings.shakeCount - shakeCount} remaining",
             15f,
             colorMuted,
             Typeface.NORMAL,
         ).apply { gravity = Gravity.CENTER }
         challengeContainer.addView(shakeRemainingText, linearParams(top = 10))
         shakeFeedback = icon
-        if (accelerometer == null) {
-            challengeContainer.addView(textView(
-                "Accelerometer unavailable — use emergency stop below.",
-                13f,
-                colorDanger,
-                Typeface.NORMAL,
-            ).apply { gravity = Gravity.CENTER }, linearParams(top = 10))
-        } else {
-            challengeContainer.addView(textView(
-                "Use deliberate shakes. Small movements are ignored.",
-                13f,
-                colorMuted,
-                Typeface.NORMAL,
-            ).apply { gravity = Gravity.CENTER }, linearParams(top = 10))
-        }
+        challengeContainer.addView(textView(
+            "Use deliberate shakes. Small movements are ignored.",
+            13f, colorMuted, Typeface.NORMAL,
+        ).apply { gravity = Gravity.CENTER }, linearParams(top = 10))
+        challengeContainer.addView(secondaryButton().apply {
+            text = "Use math instead"
+            setOnClickListener { fallbackFromShake() }
+        }, linearParams(top = 16))
         registerAccelerometer()
     }
 
     private fun registerAccelerometer() {
-        accelerometer?.let {
+        if (currentChallenge != "shake") return
+        sensorReceived = false
+        val registered = accelerometer?.let {
             sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_GAME)
+        } ?: false
+        if (!registered) {
+            handler.post { if (currentChallenge == "shake") fallbackFromShake() }
+            return
         }
+        handler.postDelayed({
+            if (currentChallenge == "shake" && !sensorReceived) fallbackFromShake()
+        }, 3_000)
+    }
+
+    private fun fallbackFromShake() {
+        sensorManager.unregisterListener(this)
+        shakeFallback = true
+        mathSolved = 0
+        mathProblem = null
+        mathInput = ""
+        // Keep this mission's existing deadline; fallback cannot extend it indefinitely.
+        showCurrentChallenge(resumeDeadline = true)
     }
 
     override fun onSensorChanged(event: SensorEvent) {
         if (currentChallenge != "shake") return
+        sensorReceived = true
         val force = sqrt(
             event.values[0] * event.values[0] +
                 event.values[1] * event.values[1] +
                 event.values[2] * event.values[2],
         ) / SensorManager.GRAVITY_EARTH
         val now = System.currentTimeMillis()
-        if (force >= 2.4f && now - lastShakeAt >= 500) {
+        if (force >= alarm.missionSettings.shakeThreshold && now - lastShakeAt >= 500) {
             lastShakeAt = now
             shakeCount += 1
-            shakeCountText?.text = "$shakeCount / 10"
-            shakeRemainingText?.text = "${10 - shakeCount} remaining"
+            shakeCountText?.text = "$shakeCount / ${alarm.missionSettings.shakeCount}"
+            shakeRemainingText?.text = "${alarm.missionSettings.shakeCount - shakeCount} remaining"
             shakeProgress?.progress = shakeCount
-            shakeFeedback?.animate()?.scaleX(1.3f)?.scaleY(1.3f)?.setDuration(100)
+            if (motionEnabled) shakeFeedback?.animate()?.scaleX(1.3f)?.scaleY(1.3f)?.setDuration(100)
                 ?.withEndAction {
                     shakeFeedback?.animate()?.scaleX(1f)?.scaleY(1f)?.setDuration(140)?.start()
                 }?.start()
             persistState()
-            if (shakeCount >= 10) nextChallenge()
+            if (shakeCount >= alarm.missionSettings.shakeCount) nextChallenge()
         }
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) = Unit
+
+    private fun showTypingChallenge() {
+        val phrase = alarm.missionSettings.typingPhrase
+        challengeContainer.addView(textView("Type this phrase", 21f, colorText, Typeface.BOLD)
+            .apply { gravity = Gravity.CENTER }, linearParams())
+        challengeContainer.addView(textView(phrase, 23f, colorPrimary, Typeface.BOLD).apply {
+            gravity = Gravity.CENTER
+            setPadding(dp(12), dp(16), dp(12), dp(16))
+            background = roundedBackground(colorPrimaryDark, 18)
+        }, linearParams(top = 18))
+        val field = EditText(this).apply {
+            setText(typingInput)
+            textSize = 20f
+            setTextColor(colorText)
+            setHintTextColor(colorMuted)
+            hint = "Type here"
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE or
+                InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO
+            }
+            setPadding(dp(16), dp(14), dp(16), dp(14))
+            background = roundedBackground(colorInput, 18)
+            // No pasted/autofilled answer; the mission requires entering the phrase.
+            isLongClickable = false
+            setTextIsSelectable(false)
+            addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    typingInput = s?.toString().orEmpty()
+                    persistState()
+                }
+                override fun afterTextChanged(s: Editable?) = Unit
+            })
+        }
+        challengeContainer.addView(field, linearParams(top = 14))
+        val feedback = textView("", 14f, colorDanger, Typeface.NORMAL).apply { gravity = Gravity.CENTER }
+        challengeContainer.addView(feedback, linearParams(top = 10))
+        challengeContainer.addView(primaryButton().apply {
+            text = "Confirm phrase"
+            setOnClickListener {
+                if (typingInput.trim() == phrase) {
+                    (getSystemService(Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager)
+                        .hideSoftInputFromWindow(field.windowToken, 0)
+                    nextChallenge()
+                } else feedback.text = "Match the phrase exactly, including capitals"
+            }
+        }, linearParams(top = 12))
+    }
+
+    private fun showOrderChallenge() {
+        val count = alarm.missionSettings.numberCount
+        if (orderNumbers.size != count) orderNumbers = (1..count).shuffled()
+        val instruction = textView("Tap numbers in ascending order", 22f, colorText, Typeface.BOLD)
+            .apply { gravity = Gravity.CENTER }
+        challengeContainer.addView(instruction, linearParams())
+        val progress = textView("$orderSelected / $count complete", 15f, colorMuted, Typeface.NORMAL)
+            .apply { gravity = Gravity.CENTER }
+        challengeContainer.addView(progress, linearParams(top = 10))
+        val grid = GridLayout(this).apply { columnCount = 3 }
+        orderNumbers.forEachIndexed { index, value ->
+            val tile = keypadButton(value.toString(), false).apply {
+                isEnabled = value > orderSelected
+                alpha = if (isEnabled) 1f else .35f
+                contentDescription = "Number $value"
+                setOnClickListener {
+                    if (value == orderSelected + 1) {
+                        orderSelected += 1
+                        isEnabled = false
+                        alpha = .35f
+                        progress.text = "$orderSelected / $count complete"
+                        persistState()
+                        if (orderSelected == count) nextChallenge()
+                    } else {
+                        progress.text = "Next number: ${orderSelected + 1}"
+                    }
+                }
+            }
+            grid.addView(tile, gridParams(index, 3, 68))
+        }
+        challengeContainer.addView(grid, linearParams(top = 20))
+    }
 
     private fun snooze() {
         if (!AlarmScheduler.scheduleSnooze(this, alarm, snoozeCount + 1)) {
@@ -755,19 +941,30 @@ class AlarmRingActivity : Activity(), SensorEventListener {
             ?: phaseRinging
         challengeDeadlineMillis = state.optLong("challengeDeadlineMillis", 0L)
         challengeIndex = state.optInt("challengeIndex", 0).coerceIn(0, challengeOrder.size)
-        mathSolved = state.optInt("mathSolved", 0).coerceIn(0, 3)
+        mathSolved = state.optInt("mathSolved", 0).coerceIn(0, alarm.missionSettings.mathQuestions)
         mathInput = state.optString("mathInput", "")
         state.optJSONObject("mathProblem")?.let {
             mathProblem = MathProblem(
                 left = it.getInt("left"),
                 right = it.getInt("right"),
                 addition = it.getBoolean("addition"),
+                operation = it.optString("operation",
+                    if (it.optBoolean("addition", true)) "add" else "subtract"),
             )
         }
         memoryPhase = state.optString("memoryPhase", "")
         restoreIntSet(state.optJSONArray("memoryTargets"), memoryTargets)
         restoreIntSet(state.optJSONArray("memorySelected"), memorySelected)
-        shakeCount = state.optInt("shakeCount", 0).coerceIn(0, 10)
+        shakeCount = state.optInt("shakeCount", 0).coerceIn(0, alarm.missionSettings.shakeCount)
+        shakeFallback = state.optBoolean("shakeFallback", false)
+        memoryRoundsSolved = state.optInt("memoryRoundsSolved", 0)
+            .coerceIn(0, alarm.missionSettings.memoryRounds)
+        typingInput = state.optString("typingInput", "")
+        val numbers = state.optJSONArray("orderNumbers")
+        val restored = if (numbers == null) emptyList() else (0 until numbers.length()).map { numbers.optInt(it) }
+        orderNumbers = restored.takeIf { it.sorted() == (1..alarm.missionSettings.numberCount).toList() }
+            ?: emptyList()
+        orderSelected = state.optInt("orderSelected", 0).coerceIn(0, alarm.missionSettings.numberCount)
     }
 
     private fun persistState() {
@@ -787,12 +984,18 @@ class AlarmRingActivity : Activity(), SensorEventListener {
                 put("left", problem.left)
                 put("right", problem.right)
                 put("addition", problem.addition)
+                put("operation", problem.operation)
             })
         }
         put("memoryPhase", memoryPhase)
         put("memoryTargets", JSONArray(memoryTargets.toList()))
         put("memorySelected", JSONArray(memorySelected.toList()))
         put("shakeCount", shakeCount)
+        put("shakeFallback", shakeFallback)
+        put("memoryRoundsSolved", memoryRoundsSolved)
+        put("typingInput", typingInput)
+        put("orderNumbers", JSONArray(orderNumbers))
+        put("orderSelected", orderSelected)
     }
 
     private fun restoreIntSet(array: JSONArray?, target: MutableSet<Int>) {
@@ -801,23 +1004,29 @@ class AlarmRingActivity : Activity(), SensorEventListener {
         for (index in 0 until array.length()) target.add(array.getInt(index))
     }
 
-    private fun primaryButton(): Button = styledButton(colorPrimary, colorText)
+    private fun primaryButton(): Button = styledButton(colorPrimary, appearance.onAccent)
 
     private fun secondaryButton(): Button = styledButton(colorPrimaryDark, colorText)
 
     private fun keypadButton(label: String, primary: Boolean): Button =
-        styledButton(if (primary) colorPrimary else colorInput, colorText).apply {
+        styledButton(if (primary) colorPrimary else colorInput,
+            if (primary) appearance.onAccent else colorText).apply {
             text = label
             textSize = if (label == "✓") 22f else 20f
+            setPadding(0, 0, 0, 0)
+            minWidth = 0
+            minHeight = 0
         }
 
     private fun styledButton(backgroundColor: Int, textColor: Int): Button = Button(this).apply {
         isAllCaps = false
         textSize = 16f
         setTextColor(textColor)
-        background = roundedBackground(backgroundColor, 18)
+        background = appearance.ripple(this@AlarmRingActivity, backgroundColor, 20)
+        appearance.elevate(this, 3f)
         stateListAnimator = null
-        setPadding(dp(12), 0, dp(12), 0)
+        minHeight = dp(56)
+        setPadding(dp(12), dp(12), dp(12), dp(12))
     }
 
     private fun textView(textValue: String, size: Float, color: Int, style: Int) =
@@ -828,17 +1037,7 @@ class AlarmRingActivity : Activity(), SensorEventListener {
             setTypeface(typeface, style)
         }
 
-    private fun roundedBackground(color: Int, radius: Int) = GradientDrawable().apply {
-        setColor(color)
-        cornerRadius = dp(radius).toFloat()
-    }
-
-    private fun roundedStrokeBackground(color: Int, stroke: Int, radius: Int) =
-        GradientDrawable().apply {
-            setColor(color)
-            setStroke(dp(1), stroke)
-            cornerRadius = dp(radius).toFloat()
-        }
+    private fun roundedBackground(color: Int, radius: Int) = appearance.shape(this, color, radius)
 
     private fun linearParams(
         width: Int = LinearLayout.LayoutParams.MATCH_PARENT,
@@ -846,12 +1045,11 @@ class AlarmRingActivity : Activity(), SensorEventListener {
         top: Int = 0,
     ) = LinearLayout.LayoutParams(width, height).apply { topMargin = dp(top) }
 
-    private fun fixedWidth(width: Int, height: Int, top: Int = 0) =
-        LinearLayout.LayoutParams(width, height).apply { topMargin = dp(top) }
-
     private fun gridParams(index: Int, columns: Int, size: Int) = GridLayout.LayoutParams().apply {
-        width = dp(size)
-        height = dp(size)
+        val fitted = min(size, (resources.configuration.screenWidthDp - 108) / columns - 8)
+            .coerceAtLeast(28)
+        width = dp(fitted)
+        height = dp(fitted)
         rowSpec = GridLayout.spec(index / columns)
         columnSpec = GridLayout.spec(index % columns)
         setMargins(dp(4), dp(4), dp(4), dp(4))
@@ -865,21 +1063,6 @@ class AlarmRingActivity : Activity(), SensorEventListener {
         private const val savedStateKey = "ring_state_json"
         private const val phaseRinging = "ringing"
         private const val phaseChallenge = "challenge"
-
-        private val colorBackground = Color.rgb(10, 12, 17)
-        private val colorCard = Color.rgb(25, 28, 36)
-        private val colorCardRaised = Color.rgb(34, 37, 47)
-        private val colorInput = Color.rgb(43, 46, 57)
-        private val colorTile = Color.rgb(52, 55, 66)
-        private val colorTrack = Color.rgb(55, 58, 69)
-        private val colorPrimary = Color.rgb(139, 128, 249)
-        private val colorPrimaryDark = Color.rgb(82, 68, 150)
-        private val colorPrimarySoft = Color.rgb(196, 188, 255)
-        private val colorText = Color.rgb(246, 243, 252)
-        private val colorMuted = Color.rgb(179, 178, 190)
-        private val colorDanger = Color.rgb(255, 180, 171)
-        private val colorDangerDim = Color.rgb(108, 63, 62)
-        private val colorSuccess = Color.rgb(128, 219, 168)
 
         fun createIntent(context: Context, alarm: AlarmData, snoozeCount: Int): Intent =
             Intent(context, AlarmRingActivity::class.java).apply {

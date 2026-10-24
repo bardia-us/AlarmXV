@@ -21,6 +21,8 @@ data class AlarmData(
     val wakeCheckDelayMinutes: Int,
     val wakeCheckTimeoutSeconds: Int,
     val wakeCheckCount: Int,
+    val groupId: String? = null,
+    val missionSettings: MissionSettings = MissionSettings(),
 ) {
     fun toJson(): JSONObject = JSONObject().apply {
         put("id", id)
@@ -35,6 +37,8 @@ data class AlarmData(
         put("preventVolumeReduction", preventVolumeReduction)
         put("alarmSoundUri", alarmSoundUri ?: "")
         put("alarmSoundName", alarmSoundName)
+        put("groupId", groupId ?: JSONObject.NULL)
+        put("missionSettings", missionSettings.toJson())
         put("wakeCheck", JSONObject().apply {
             put("enabled", wakeCheckEnabled)
             put("delayMinutes", wakeCheckDelayMinutes)
@@ -55,7 +59,7 @@ data class AlarmData(
             } else {
                 challenges.add(json.optString("challenge", "math"))
             }
-            challenges.retainAll(setOf("math", "memory", "shake"))
+            challenges.retainAll(setOf("math", "memory", "shake", "typing", "order"))
             if (challenges.isEmpty()) challenges.add("math")
             val wakeCheck = json.optJSONObject("wakeCheck") ?: JSONObject()
 
@@ -83,6 +87,8 @@ data class AlarmData(
                     .coerceIn(2, 10),
                 wakeCheckTimeoutSeconds = 60,
                 wakeCheckCount = wakeCheck.optInt("checkCount", 1).coerceIn(1, 5),
+                groupId = json.optString("groupId", "").takeIf { it.isNotBlank() && it != "null" },
+                missionSettings = MissionSettings.fromJson(json.optJSONObject("missionSettings")),
             )
         }
 
@@ -112,10 +118,10 @@ object AlarmStore {
     }
 
     fun save(context: Context, encoded: String) {
-        context.getSharedPreferences(preferencesName, Context.MODE_PRIVATE)
+        check(context.getSharedPreferences(preferencesName, Context.MODE_PRIVATE)
             .edit()
             .putString(alarmsKey, encoded)
-            .apply()
+            .commit()) { "Could not save alarms" }
     }
 
     fun find(context: Context, id: String): AlarmData? =
