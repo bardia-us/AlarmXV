@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 
 import '../models/alarm.dart';
+import '../models/app_settings.dart';
 
 class AlarmPermissionStatus {
   const AlarmPermissionStatus({
@@ -64,6 +65,14 @@ class AlarmStorage {
   const AlarmStorage();
 
   static const _channel = MethodChannel('alarm_xv/alarm_manager');
+
+  Future<AppSettings> loadAppSettings() async {
+    final encoded = await _channel.invokeMethod<String>('loadAppSettings') ?? '{}';
+    return AppSettings.fromJson(jsonDecode(encoded) as Map<String, dynamic>);
+  }
+
+  Future<void> saveAppSettings(AppSettings settings) =>
+    _channel.invokeMethod<void>('saveAppSettings', jsonEncode(settings.toJson()));
 
   Future<List<Alarm>> load() async {
     final encoded = await _channel.invokeMethod<String>('loadAlarms') ?? '[]';

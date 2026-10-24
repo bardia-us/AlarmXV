@@ -1,5 +1,6 @@
 import '../challenges/challenge_type.dart';
 import 'wake_check_settings.dart';
+import 'mission_settings.dart';
 
 class Alarm {
   const Alarm({
@@ -16,6 +17,8 @@ class Alarm {
     this.alarmSoundUri,
     this.alarmSoundName = 'Default alarm sound',
     this.wakeCheck = const WakeCheckSettings(),
+    this.groupId,
+    this.missionSettings = const MissionSettings(),
   });
 
   final String id;
@@ -31,8 +34,21 @@ class Alarm {
   final String? alarmSoundUri;
   final String alarmSoundName;
   final WakeCheckSettings wakeCheck;
+  final String? groupId;
+  final MissionSettings missionSettings;
+
+  /// Display-only counterpart to native AlarmManager scheduling.
+  DateTime? nextOccurrence(DateTime after) {
+    if (!isEnabled || weekdays.isEmpty) return null;
+    for (var offset = 0; offset <= 7; offset++) {
+      final candidate = DateTime(after.year, after.month, after.day + offset, hour, minute);
+      if (weekdays.contains(candidate.weekday) && candidate.isAfter(after)) return candidate;
+    }
+    return null;
+  }
 
   Alarm copyWith({
+    String? id,
     String? label,
     int? hour,
     int? minute,
@@ -45,9 +61,12 @@ class Alarm {
     String? alarmSoundUri,
     String? alarmSoundName,
     WakeCheckSettings? wakeCheck,
+    String? groupId,
+    bool clearGroup = false,
+    MissionSettings? missionSettings,
   }) {
     return Alarm(
-      id: id,
+      id: id ?? this.id,
       label: label ?? this.label,
       hour: hour ?? this.hour,
       minute: minute ?? this.minute,
@@ -61,6 +80,8 @@ class Alarm {
       alarmSoundUri: alarmSoundUri ?? this.alarmSoundUri,
       alarmSoundName: alarmSoundName ?? this.alarmSoundName,
       wakeCheck: wakeCheck ?? this.wakeCheck,
+      groupId: clearGroup ? null : groupId ?? this.groupId,
+      missionSettings: missionSettings ?? this.missionSettings,
     );
   }
 
@@ -79,6 +100,8 @@ class Alarm {
       'alarmSoundUri': alarmSoundUri ?? '',
       'alarmSoundName': alarmSoundName,
       'wakeCheck': wakeCheck.toJson(),
+      'groupId': groupId ?? '',
+      'missionSettings': missionSettings.toJson(),
     };
   }
 
@@ -118,6 +141,8 @@ class Alarm {
       wakeCheck: WakeCheckSettings.fromJson(
         json['wakeCheck'] as Map<String, dynamic>?,
       ),
+      groupId: (json['groupId'] as String?)?.isNotEmpty == true ? json['groupId'] as String : null,
+      missionSettings: MissionSettings.fromJson(json['missionSettings'] as Map<String, dynamic>?),
     );
   }
 }
