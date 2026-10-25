@@ -85,3 +85,12 @@
 - Public main received documentation/license/images only in f10f82d; public app source remains v1.2.0. The preview application code is preserved separately on redesign/clay-v2, with main documentation merged back into that branch.
 - Final signed APKs remain local in dist/2.0.0-preview.2. No public Release, tag, additional test run or device installation was performed.
 - Duplicate launcher icons still require inspection of the owner's actual launcher/package state; device was disconnected during the authorized read-only query. Do not claim the task-affinity fix proves this separate report resolved.
+
+## Checkpoint10 — owner-authorized Release installation, 2026-10-25
+
+- Owner removed the reported clone, reconnected the phone and explicitly requested installation plus a duplicate check. This authorizes this narrow device check; broad alarm/performance testing remains stopped.
+- Samsung has primary user0 and a running DUAL_APP user95. Before install, preview1/code5004 existed only for user0; user95 had installed=false and no launcher activity. Therefore the removed clone's original state cannot be reconstructed conclusively.
+- Official Android ADB documentation warns that an unspecified install user can target all existing users. Earlier unscoped install-r is a plausible cause. For future installs ALWAYS inspect am get-current-user and explicitly use --user 0 on this device; do not install into DUAL_APP or use unscoped install.
+- Installed the existing, unchanged ARM64 Release APK using adb install --user 0 -r; command returned Success. No uninstall or data-clear command was used.
+- Post-install package version2.0.0-preview.2/code5005; user0 installed=true with the same CE/DE data inode values as before. Exactly one MAIN/LAUNCHER activity (MainActivity) for user0; user95 installed=false and no launcher activities. No duplicate installation was created by this install. Existing visual home-screen shortcut placement was not independently inspected.
+- Reference: https://developer.android.com/tools/adb and https://source.android.com/docs/devices/admin/multi-user-testing . No app source, APK, public Release or additional automated tests changed.
