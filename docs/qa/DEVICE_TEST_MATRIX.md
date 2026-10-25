@@ -1,6 +1,6 @@
 # Android acceptance matrix
 
-Preview release gate: physical testing is in progress on a connected Samsung Galaxy A34 (Android16,120Hz). Unit/widget success does not substitute for the pending rows below.
+Physical scope stopped at the owner's request: preview1 Profile was installed over the existing app and one editor-scrolling sample measured on Galaxy A34 (Android16,120Hz). Preview2 was compiled and source-reviewed only. The phone later disconnected; unit/widget success does not substitute for the pending rows below.
 
 | Scenario | Expected behavior | Evidence now |
 |---|---|---|
@@ -16,11 +16,14 @@ Preview release gate: physical testing is in progress on a connected Samsung Gal
 | Two alarms close together | Current single ringing service handles replacement; no reliable queue is claimed | Known architectural limit; see STATUS |
 | Mission complete then checker count1 | Silent60s check; no new checker cycle after failure alarm is solved | Existing Dart transition tests + native source; device pending |
 | Large text/RTL/keyboard | Home/editor/settings stay usable with scrolling | Automated widget tests, not Android keyboard test |
-| Light/dark/ripple | Coherent surfaces, rounded clipped touch feedback | Widget captures; native lockscreen inspection pending |
+| Light/dark/ripple | Coherent surfaces, rounded clipped touch feedback | Earlier preview1 widget captures; preview2 source only; native inspection pending |
 | Sound choice | System picker previews installed sounds; selected URI persists | Source reviewed, physical test pending |
 | Sensor absent/rejected | Math fallback remains available | Native branch reviewed; hardware test pending |
 | Manual update | GitHub request only on tap; compatible APK opens in browser | ABI/version/link unit tests; browser integration device pending |
-|120Hz Profile | P95/P99 UI+raster and native frame traces captured on physical hardware | Not measured; no FPS assertion |
+|120Hz Profile | P95/P99 UI+raster and native frame traces captured on physical hardware | One preview1 editor sample recorded; other pages/native pending; no constant FPS assertion |
+| Normal mode and hardware volume | Direct dismissal, no mission/checker/guard, controllable system/custom volume | Preview2 source review + Release compile only |
+| Task/launcher duplication | One app identity, one native task entry and no duplicate launcher | APK ID/signer/launcher verified; actual two icons unconfirmed on disconnected phone |
+| Moon/sun and equal-content group transition | System default, explicit manual toggle and visible group transition | Preview2 source review + compiler only; no new runtime tests |
 
 ## Profiling procedure
 
