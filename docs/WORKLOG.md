@@ -71,3 +71,11 @@
 - User reported an apparent clone and asked for official Android research. No new install performed. Original installed profile used exactly com.alarmxv.alarm_xv with release signer matching1.2 and install-r; source has no applicationIdSuffix or second launcher. Awaiting whether observed duplication is Recents cards, launcher shortcuts or actual Settings packages; do not pretend runtime cause is proved.
 - Android references: https://developer.android.com/guide/components/activities/tasks-and-back-stack and https://developer.android.com/studio/publish/app-signing. Affinity/singleTask/canonical intents address task duplication; same ID+signer maintain update identity. No device query/uninstall/cleanup authorized or performed after stop request.
 - Final release compiler command running for ARMv7/ARM64 split outputs then universal; no tests or install in that command.
+
+## Checkpoint8 — APK build complete
+
+- Source checkpoint dacabf6 pushed to GitHub branch redesign/clay-v2 (not merged). Private Release compile completed successfully: v7a/v8a splits165s, universal56.4s; no standalonex86APK in final directory.
+- Final files dist/2.0.0-preview.2/*.apk, all com.alarmxv.alarm_xv /2.0.0-preview.2/code5005, same signer4f1567... as1.2.0 and singleMainActivity launcher. Verified integrity and wrote local SHA256SUMS; do not upload APKs publicly before approval.
+- User clarified TWO LAUNCHER ICONS. Read-only targeted pm/query-activities attempted; phoneR... no longer connected, all queries returned device-not-found. No install/uninstall/launch/test or cleanup performed. Do not assert actual launcher/package duplication solved; source task fix and stable package identity are the available evidence.
+- SDK3.47.8 fully working; oldSDK backup retained. No runtime tests after stop. Remaining known gap: singleton active-alarm engine; OEM/task/volume/nav behavior ofpreview2 awaitsowner testing.
+- Last remaining administrative work: push final evidence docs, update public bilingual README/CHANGELOG/GPL and design images onmain only, open draft source review PR without merge/publicRelease.
