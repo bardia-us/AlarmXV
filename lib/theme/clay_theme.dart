@@ -152,6 +152,8 @@ ThemeData buildClayTheme(Brightness brightness, AccentPalette accent) {
     timePickerTheme: TimePickerThemeData(
       backgroundColor: tokens.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+      hourMinuteShape: rounded,
+      dayPeriodShape: rounded,
     ),
     popupMenuTheme: PopupMenuThemeData(
       color: tokens.surface,

@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import 'package:alarm_xv/main.dart';
+import 'package:alarm_xv/l10n/app_strings.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:alarm_xv/challenges/challenge_type.dart';
 import 'package:alarm_xv/models/alarm.dart';
 import 'package:alarm_xv/models/alarm_group.dart';
@@ -29,6 +31,8 @@ void main() {
   };
 
   setUp(() {
+    TestWidgetsFlutterBinding.instance.platformDispatcher.localesTestValue =
+        const [Locale('fa')];
     alarms = [
       {
         'id': 'legacy',
@@ -85,6 +89,8 @@ void main() {
   });
 
   tearDown(() {
+    TestWidgetsFlutterBinding.instance.platformDispatcher
+        .clearLocalesTestValue();
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, null);
   });
@@ -194,6 +200,14 @@ void main() {
       );
       await tester.pumpWidget(
         MaterialApp(
+          locale: const Locale('fa'),
+          supportedLocales: AppStrings.supportedLocales,
+          localizationsDelegates: const [
+            AppStrings.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
           theme: buildClayTheme(Brightness.light, AccentPalette.ocean),
           builder: (context, child) =>
               Directionality(textDirection: TextDirection.rtl, child: child!),
@@ -281,7 +295,11 @@ void main() {
       SwitchListTile,
       'هماهنگ با سیستم',
     );
-    await tester.ensureVisible(automaticTheme);
+    await Scrollable.ensureVisible(
+      tester.element(automaticTheme),
+      alignment: .35,
+    );
+    await tester.pumpAndSettle();
     await tester.tap(automaticTheme);
     await tester.pumpAndSettle();
     expect(settings['themeMode'], 'system');

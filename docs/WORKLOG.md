@@ -94,3 +94,15 @@
 - Installed the existing, unchanged ARM64 Release APK using adb install --user 0 -r; command returned Success. No uninstall or data-clear command was used.
 - Post-install package version2.0.0-preview.2/code5005; user0 installed=true with the same CE/DE data inode values as before. Exactly one MAIN/LAUNCHER activity (MainActivity) for user0; user95 installed=false and no launcher activities. No duplicate installation was created by this install. Existing visual home-screen shortcut placement was not independently inspected.
 - Reference: https://developer.android.com/tools/adb and https://source.android.com/docs/devices/admin/multi-user-testing . No app source, APK, public Release or additional automated tests changed.
+
+## Checkpoint11 — frosted chrome and bilingual UI, 2026-10-25
+
+- Owner explicitly requested scoped Light/Dark/scroll/menu checks for the new work, superseding the previous no-more-tests preference only for this development verification. No new phone installation or broad alarm/device test is implied.
+- Canonical repository is Desktop/ph/AlarmXV. Desktop/AlarmXV contains only build output, not app source; do not create a second project there.
+- Read niraNG app_shell.dart AppBar.flexibleSpace and glass_surface.dart FrostedSurface. Only the shader-free frosted recipe was adapted; niraNG remains unchanged.
+- New reusable FrostedSurface: ClipRRect / BackdropFilter / themed ColoredBox / transparent Material, sigma8 and Light.64/Dark.45. Text-rich menus use sigma14 and Light.78/Dark.64. Independent overlapping filters; no shared key, per-list-item filter or production captures. Reduced effects/high contrast are opaque.
+- Home/Settings/Groups chrome extends above actual scrolling bodies; safe initial padding and fixed footer insets preserved. Existing Clay content is retained. Menus transition their panel/entries together without opacity; Back button has a short elastic press.
+- Root cause of cropped card shadow: SizeTransition keeps a rectangular clip even after the insertion finishes. Completed items now paint without that transition clip. Time-picker hour/minute/day-period shapes use the existing rounded token.
+- Added system/fa/en appearance setting, Flutter SDK localizations, a named-parameter UI catalog and native presentation catalog for alarm/mission/wake-check/notification strings. Layout direction follows language. Saved labels, phrases, core timing and application identity unchanged.
+- Fresh verification: analyzer clean; full Flutter suite39passed/1opt-in visual skipped; separate visual fixture passed; native Release Kotlin compiled and12JVM tests passed. Four UI regression checks were observed failing on the original behavior before fixes; language migration was also RED/GREEN.
+- APK version2.0.0-preview.3+5006 with updated What's New and bilingual changelog. Build artifacts pending final compilation. No new physical-device performance claim; source-reviewed native localization is not a complete alarm-cycle test.

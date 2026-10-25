@@ -1,8 +1,11 @@
+import '../l10n/app_strings.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../theme/settings_controller.dart';
 import 'clay_components.dart';
+import 'frosted_menu.dart';
 
 /// One deliberate theme action, shared by the top bar and appearance settings.
 class ClayThemeToggle extends StatelessWidget {
@@ -17,27 +20,22 @@ class ClayThemeToggle extends StatelessWidget {
     } catch (_) {
       if (context.mounted)
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('ظاهر جدید ذخیره نشد؛ دوباره تلاش کن.')),
+          SnackBar(
+            content: Text(context.tr("ظاهر جدید ذخیره نشد؛ دوباره تلاش کن.")),
+          ),
         );
     }
   }
 
   Future<void> _systemMenu(BuildContext context) async {
     if (controller.isSaving) return;
-    final anchor = context.findRenderObject() as RenderBox?;
-    final overlay =
-        Navigator.of(context).overlay?.context.findRenderObject() as RenderBox?;
-    if (anchor == null || overlay == null) return;
-    final origin = anchor.localToGlobal(Offset.zero, ancestor: overlay);
-    final chosen = await showMenu<ThemeMode>(
+    final chosen = await showFrostedMenu<ThemeMode>(
       context: context,
-      clipBehavior: Clip.antiAlias,
-      position: RelativeRect.fromRect(
-        origin & anchor.size,
-        Offset.zero & overlay.size,
-      ),
-      items: const [
-        PopupMenuItem(value: ThemeMode.system, child: Text('پیروی از سیستم')),
+      items: [
+        PopupMenuItem(
+          value: ThemeMode.system,
+          child: Text(context.tr("پیروی از سیستم")),
+        ),
       ],
     );
     if (chosen != null && context.mounted) await _save(context, chosen);
@@ -50,13 +48,17 @@ class ClayThemeToggle extends StatelessWidget {
       final dark = Theme.of(context).brightness == Brightness.dark;
       final automatic = controller.settings.themeMode == ThemeMode.system;
       final next = dark ? ThemeMode.light : ThemeMode.dark;
-      final action = dark ? 'رفتن به حالت روشن' : 'رفتن به حالت تیره';
+      final action = dark
+          ? context.tr("رفتن به حالت روشن")
+          : context.tr("رفتن به حالت تیره");
       return Semantics(
         label:
-            'ظاهر فعلی: ' +
-            (dark ? 'تیره' : 'روشن') +
-            (automatic ? '، هماهنگ با سیستم' : '، انتخاب دستی'),
-        hint: 'برای پیروی از سیستم نگه دار',
+            context.tr("ظاهر فعلی: ") +
+            (dark ? context.tr("تیره") : context.tr("روشن")) +
+            (automatic
+                ? context.tr("، هماهنگ با سیستم")
+                : context.tr("، انتخاب دستی")),
+        hint: context.tr("برای پیروی از سیستم نگه دار"),
         child: GestureDetector(
           onLongPress: controller.isSaving ? null : () => _systemMenu(context),
           child: ClayPress(

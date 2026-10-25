@@ -1,3 +1,5 @@
+import '../l10n/app_strings.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -10,6 +12,8 @@ import '../theme/clay_theme.dart';
 import '../theme/settings_controller.dart';
 import '../widgets/alarm_editor_sheet.dart';
 import '../widgets/clay_components.dart';
+import '../widgets/frosted_surface.dart';
+import '../widgets/frosted_menu.dart';
 import '../widgets/app_info_section.dart';
 import '../widgets/theme_toggle_button.dart';
 import 'group_manager_screen.dart';
@@ -28,11 +32,13 @@ String alarmTime(Alarm a) =>
     a.hour.toString().padLeft(2, '0') +
     ':' +
     a.minute.toString().padLeft(2, '0');
-String alarmDays(Set<int> days) => days.length == 7
-    ? 'هر روز'
+String alarmDays(BuildContext context, Set<int> days) => days.length == 7
+    ? context.tr("هر روز")
     : days.isEmpty
-    ? 'بدون روز تکرار'
-    : (days.toList()..sort()).map((d) => dayLabels[d - 1]).join('، ');
+    ? context.tr("بدون روز تکرار")
+    : (days.toList()..sort())
+          .map((d) => context.tr(dayLabels[d - 1]))
+          .join(context.tr("، "));
 
 enum AlarmSort { next, time, name }
 
@@ -144,8 +150,8 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   String _error(Object e) => e is PlatformException
-      ? e.message ?? 'ذخیره نشد؛ دوباره تلاش کن.'
-      : 'انجام نشد؛ دوباره تلاش کن.';
+      ? e.message ?? context.tr("ذخیره نشد؛ دوباره تلاش کن.")
+      : context.tr("انجام نشد؛ دوباره تلاش کن.");
   Future<void> _load({bool silent = false}) async {
     final generation = ++_readGeneration;
     if (!silent && mounted)
@@ -177,7 +183,7 @@ class _HomeScreenState extends State<HomeScreen>
       if (mounted && generation == _readGeneration)
         setState(() {
           _loading = false;
-          _loadError = 'زنگ‌ها خوانده نشدن. دوباره تلاش کن.';
+          _loadError = context.tr("زنگ‌ها خوانده نشدن. دوباره تلاش کن.");
         });
     }
   }
@@ -200,7 +206,9 @@ class _HomeScreenState extends State<HomeScreen>
           (next.any((a) => a.isEnabled) &&
               !_hasRequiredAccess(result.permissions, next)))
         _message(
-          'زنگ ذخیره شد، اما زمان‌بندی کامل نشد؛ دسترسی‌ها را بررسی کن و دوباره تلاش کن.',
+          context.tr(
+            "زنگ ذخیره شد، اما زمان‌بندی کامل نشد؛ دسترسی‌ها را بررسی کن و دوباره تلاش کن.",
+          ),
         );
       return true;
     } catch (e) {
@@ -233,9 +241,9 @@ class _HomeScreenState extends State<HomeScreen>
     if (!saved && mounted)
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('تغییر ذخیره نشد؛ نسخه قبلی حفظ شد.'),
+          content: Text(context.tr("تغییر ذخیره نشد؛ نسخه قبلی حفظ شد.")),
           action: SnackBarAction(
-            label: 'بازکردن پیش‌نویس',
+            label: context.tr("بازکردن پیش‌نویس"),
             onPressed: () => _retryDraft(draft, alarm),
           ),
         ),
@@ -279,17 +287,18 @@ class _HomeScreenState extends State<HomeScreen>
   Future<void> _duplicate(Alarm alarm) async {
     final copy = alarm.copyWith(
       id: DateTime.now().microsecondsSinceEpoch.toString(),
-      label: alarm.label + ' • کپی',
+      label: alarm.label + context.tr(" • کپی"),
     );
-    if (await _commit([..._alarms, copy])) _message('یک کپی از زنگ ساخته شد.');
+    if (await _commit([..._alarms, copy]))
+      _message(context.tr("یک کپی از زنگ ساخته شد."));
   }
 
   Future<void> _delete(Alarm alarm) async {
     if (!await confirmAction(
       context,
-      title: 'حذف زنگ؟',
-      message: '«' + alarm.label + '» از زنگ‌ها حذف می‌شه.',
-      action: 'حذف',
+      title: context.tr("حذف زنگ؟"),
+      message: context.tr("«{p0}» از زنگ‌ها حذف می‌شه.", {'p0': alarm.label}),
+      action: context.tr("حذف"),
       destructive: true,
     ))
       return;
@@ -325,7 +334,11 @@ class _HomeScreenState extends State<HomeScreen>
           if (_group == group.id) _group = null;
         });
       if (_scheduleIncomplete)
-        _message('زنگ‌ها ذخیره شدن، اما زمان‌بندی کامل نشده؛ دوباره تلاش کن.');
+        _message(
+          context.tr(
+            "زنگ‌ها ذخیره شدن، اما زمان‌بندی کامل نشده؛ دوباره تلاش کن.",
+          ),
+        );
       return true;
     } catch (e) {
       if (alarmsWritten) {
@@ -342,7 +355,9 @@ class _HomeScreenState extends State<HomeScreen>
         } catch (_) {
           await _load(silent: true);
           _message(
-            'برگرداندن گروه کامل نشد؛ وضعیت ذخیره‌شده دوباره خوانده شد.',
+            context.tr(
+              "برگرداندن گروه کامل نشد؛ وضعیت ذخیره‌شده دوباره خوانده شد.",
+            ),
           );
         }
       }
@@ -409,7 +424,56 @@ class _HomeScreenState extends State<HomeScreen>
       final scheme = Theme.of(context).colorScheme;
       return Scaffold(
         extendBody: true,
+        extendBodyBehindAppBar: true,
+        appBar: FrostedAppBar(
+          toolbarHeight: 80,
+          title: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'AlarmXV',
+                      textDirection: TextDirection.ltr,
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -1,
+                          ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      context.tr("صبح از اینجا شروع می‌شه"),
+                      style: Theme.of(context).textTheme.bodySmall
+                          ?.copyWith(color: scheme.onSurfaceVariant),
+                    ),
+                  ],
+                ),
+              ),
+              ClayThemeToggle(controller: widget.settings),
+              const SizedBox(width: 8),
+              ClayPress(
+                child: ClaySurface(
+                  padding: EdgeInsets.zero,
+                  radius: 18,
+                  child: IconButton(
+                    tooltip: context.tr("تنظیمات"),
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) =>
+                            SettingsScreen(controller: widget.settings),
+                      ),
+                    ),
+                    icon: const Icon(Icons.tune_rounded),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
         body: SafeArea(
+          top: false,
           bottom: false,
           child: Center(
             child: ConstrainedBox(
@@ -420,63 +484,16 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
                 slivers: [
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(22, 22, 22, 18),
+                    padding: EdgeInsets.fromLTRB(
+                      22,
+                      MediaQuery.paddingOf(context).top + 96,
+                      22,
+                      18,
+                    ),
                     sliver: SliverToBoxAdapter(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'AlarmXV',
-                                      textDirection: TextDirection.ltr,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .headlineSmall
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w900,
-                                            letterSpacing: -1,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'صبح از اینجا شروع می‌شه',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall
-                                          ?.copyWith(
-                                            color: scheme.onSurfaceVariant,
-                                          ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              ClayThemeToggle(controller: widget.settings),
-                              const SizedBox(width: 8),
-                              ClayPress(
-                                child: ClaySurface(
-                                  padding: EdgeInsets.zero,
-                                  radius: 18,
-                                  child: IconButton(
-                                    tooltip: 'تنظیمات',
-                                    onPressed: () => Navigator.of(context).push(
-                                      MaterialPageRoute<void>(
-                                        builder: (_) => SettingsScreen(
-                                          controller: widget.settings,
-                                        ),
-                                      ),
-                                    ),
-                                    icon: const Icon(Icons.tune_rounded),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 26),
                           if (!_loading && _loadError == null)
                             _NextAlarmHero(
                               alarms: _alarms,
@@ -502,21 +519,23 @@ class _HomeScreenState extends State<HomeScreen>
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text(
-                                    'زمان‌بندی کامل نشده',
-                                    style: TextStyle(
+                                  Text(
+                                    context.tr("زمان‌بندی کامل نشده"),
+                                    style: const TextStyle(
                                       fontWeight: FontWeight.w800,
                                     ),
                                   ),
                                   const SizedBox(height: 8),
-                                  const Text(
-                                    'زنگ‌ها ذخیره شدن، اما اندروید زمان‌بندی همهٔ زنگ‌ها رو تأیید نکرده.',
+                                  Text(
+                                    context.tr(
+                                      "زنگ‌ها ذخیره شدن، اما اندروید زمان‌بندی همهٔ زنگ‌ها رو تأیید نکرده.",
+                                    ),
                                   ),
                                   const SizedBox(height: 10),
                                   OutlinedButton(
                                     onPressed: _busy ? null : _retryScheduling,
-                                    child: const Text(
-                                      'تلاش دوباره برای زمان‌بندی',
+                                    child: Text(
+                                      context.tr("تلاش دوباره برای زمان‌بندی"),
                                     ),
                                   ),
                                 ],
@@ -525,32 +544,28 @@ class _HomeScreenState extends State<HomeScreen>
                           ],
                           const SizedBox(height: 24),
                           SectionHeading(
-                            'زنگ‌های من',
-                            subtitle:
-                                _alarms
-                                    .where((a) => a.isEnabled)
-                                    .length
-                                    .toString() +
-                                ' زنگ فعال از ' +
-                                _alarms.length.toString(),
-                            trailing: PopupMenuButton<AlarmSort>(
-                              clipBehavior: Clip.antiAlias,
-                              tooltip: 'مرتب‌سازی',
+                            context.tr("زنگ‌های من"),
+                            subtitle: context.tr("{p0} زنگ فعال از {p1}", {
+                              'p0': _alarms.where((a) => a.isEnabled).length,
+                              'p1': _alarms.length,
+                            }),
+                            trailing: FrostedMenuButton<AlarmSort>(
+                              tooltip: context.tr("مرتب‌سازی"),
                               initialValue: _sort,
                               onSelected: (v) => setState(() => _sort = v),
                               icon: const Icon(Icons.sort_rounded),
-                              itemBuilder: (_) => const [
+                              itemBuilder: (_) => [
                                 PopupMenuItem(
                                   value: AlarmSort.next,
-                                  child: Text('نزدیک‌ترین زنگ'),
+                                  child: Text(context.tr("نزدیک‌ترین زنگ")),
                                 ),
                                 PopupMenuItem(
                                   value: AlarmSort.time,
-                                  child: Text('ساعت زنگ'),
+                                  child: Text(context.tr("ساعت زنگ")),
                                 ),
                                 PopupMenuItem(
                                   value: AlarmSort.name,
-                                  child: Text('نام زنگ'),
+                                  child: Text(context.tr("نام زنگ")),
                                 ),
                               ],
                             ),
@@ -565,12 +580,12 @@ class _HomeScreenState extends State<HomeScreen>
                             ),
                             onChanged: (_) => setState(() {}),
                             decoration: InputDecoration(
-                              hintText: 'جست‌وجوی زنگ یا گروه',
+                              hintText: context.tr("جست‌وجوی زنگ یا گروه"),
                               prefixIcon: const Icon(Icons.search_rounded),
                               suffixIcon: _search.text.isEmpty
                                   ? null
                                   : IconButton(
-                                      tooltip: 'پاک‌کردن جست‌وجو',
+                                      tooltip: context.tr("پاک‌کردن جست‌وجو"),
                                       onPressed: () => setState(_search.clear),
                                       icon: const Icon(Icons.close_rounded),
                                     ),
@@ -583,7 +598,7 @@ class _HomeScreenState extends State<HomeScreen>
                             child: Row(
                               children: [
                                 ChoiceChip(
-                                  label: const Text('همه'),
+                                  label: Text(context.tr("همه")),
                                   selected: _group == null,
                                   onSelected: (_) => _selectGroup(null),
                                 ),
@@ -606,7 +621,7 @@ class _HomeScreenState extends State<HomeScreen>
                                     Icons.folder_open_rounded,
                                     size: 18,
                                   ),
-                                  label: const Text('گروه‌ها'),
+                                  label: Text(context.tr("گروه‌ها")),
                                   onPressed: _busy ? null : _manageGroups,
                                 ),
                               ],
@@ -628,8 +643,8 @@ class _HomeScreenState extends State<HomeScreen>
                       child: _empty(
                         Icons.error_outline_rounded,
                         _loadError!,
-                        'اطلاعات قبلی حذف نشده؛ دوباره امتحان کن.',
-                        action: 'تلاش دوباره',
+                        context.tr("اطلاعات قبلی حذف نشده؛ دوباره امتحان کن."),
+                        action: context.tr("تلاش دوباره"),
                         onAction: _load,
                       ),
                     )
@@ -641,14 +656,16 @@ class _HomeScreenState extends State<HomeScreen>
                               ? Icons.alarm_add_rounded
                               : Icons.search_off_rounded,
                           _alarms.isEmpty
-                              ? 'اولین صبحِ برنامه‌ریزی‌شده'
-                              : 'زنگی پیدا نشد',
+                              ? context.tr("اولین صبحِ برنامه‌ریزی‌شده")
+                              : context.tr("زنگی پیدا نشد"),
                           _alarms.isEmpty
-                              ? 'زمان، روزها و نوع بیدارشدن رو انتخاب کن.'
-                              : 'جست‌وجو یا فیلتر گروه رو عوض کن.',
+                              ? context.tr(
+                                  "زمان، روزها و نوع بیدارشدن رو انتخاب کن.",
+                                )
+                              : context.tr("جست‌وجو یا فیلتر گروه رو عوض کن."),
                           action: _alarms.isEmpty
-                              ? 'ساخت اولین زنگ'
-                              : 'نمایش همه',
+                              ? context.tr("ساخت اولین زنگ")
+                              : context.tr("نمایش همه"),
                           onAction: _alarms.isEmpty
                               ? _edit
                               : () {
@@ -691,7 +708,7 @@ class _HomeScreenState extends State<HomeScreen>
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.add_alarm_rounded),
-              label: const Text('زنگ جدید'),
+              label: Text(context.tr("زنگ جدید")),
             ),
           ),
         ),
@@ -777,9 +794,8 @@ class _HomeScreenState extends State<HomeScreen>
                     value: alarm.isEnabled,
                     onChanged: _busy ? null : (v) => _toggle(alarm, v),
                   ),
-                  PopupMenuButton<String>(
-                    clipBehavior: Clip.antiAlias,
-                    tooltip: 'گزینه‌های ' + alarm.label,
+                  FrostedMenuButton<String>(
+                    tooltip: context.tr("گزینه‌های ") + alarm.label,
                     enabled: !_busy,
                     padding: EdgeInsets.zero,
                     onSelected: (v) {
@@ -792,17 +808,26 @@ class _HomeScreenState extends State<HomeScreen>
                           _delete(alarm);
                       }
                     },
-                    itemBuilder: (_) => const [
-                      PopupMenuItem(value: 'edit', child: Text('ویرایش')),
-                      PopupMenuItem(value: 'copy', child: Text('ساخت کپی')),
-                      PopupMenuItem(value: 'delete', child: Text('حذف زنگ')),
+                    itemBuilder: (_) => [
+                      PopupMenuItem(
+                        value: 'edit',
+                        child: Text(context.tr("ویرایش")),
+                      ),
+                      PopupMenuItem(
+                        value: 'copy',
+                        child: Text(context.tr("ساخت کپی")),
+                      ),
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: Text(context.tr("حذف زنگ")),
+                      ),
                     ],
                   ),
                 ],
               ),
               const SizedBox(height: 12),
               Text(
-                alarmDays(alarm.weekdays),
+                alarmDays(context, alarm.weekdays),
                 style: Theme.of(context).textTheme.bodySmall
                     ?.copyWith(color: scheme.onSurfaceVariant, height: 1.6),
               ),
@@ -818,10 +843,16 @@ class _HomeScreenState extends State<HomeScreen>
                       color: accessibleGroupColor(context, Color(group.color)),
                     ),
                   if (alarm.mode == AlarmMode.normal)
-                    const StatusPill('زنگ عادی', icon: Icons.alarm_rounded)
+                    StatusPill(
+                      context.tr("زنگ عادی"),
+                      icon: Icons.alarm_rounded,
+                    )
                   else
                     StatusPill(
-                      alarm.challenges.take(2).map(missionName).join('، ') +
+                      alarm.challenges
+                              .take(2)
+                              .map((type) => missionName(context, type))
+                              .join(context.tr("، ")) +
                           (alarm.challenges.length > 2
                               ? ' +' + (alarm.challenges.length - 2).toString()
                               : ''),
@@ -829,12 +860,15 @@ class _HomeScreenState extends State<HomeScreen>
                     ),
                   if (alarm.mode == AlarmMode.challenge &&
                       alarm.wakeCheck.enabled)
-                    const StatusPill(
-                      'بررسی بیداری',
+                    StatusPill(
+                      context.tr("بررسی بیداری"),
                       icon: Icons.verified_outlined,
                     ),
                   if (!alarm.isEnabled)
-                    StatusPill('خاموش', color: scheme.onSurfaceVariant),
+                    StatusPill(
+                      context.tr("خاموش"),
+                      color: scheme.onSurfaceVariant,
+                    ),
                 ],
               ),
             ],
@@ -850,15 +884,19 @@ class _HomeScreenState extends State<HomeScreen>
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'برای زنگ مطمئن، دسترسی‌ها رو کامل کن',
-          style: TextStyle(fontWeight: FontWeight.w800),
+        Text(
+          context.tr("برای زنگ مطمئن، دسترسی‌ها رو کامل کن"),
+          style: const TextStyle(fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: 6),
         Text(
           _needsChallengeAccess
-              ? 'اندروید برای زمان دقیق و نمایش زنگ روی صفحه قفل به این دسترسی‌ها نیاز داره.'
-              : 'زنگ عادی برای زمان دقیق و نمایش اعلان به این دسترسی‌ها نیاز داره.',
+              ? context.tr(
+                  "اندروید برای زمان دقیق و نمایش زنگ روی صفحه قفل به این دسترسی‌ها نیاز داره.",
+                )
+              : context.tr(
+                  "زنگ عادی برای زمان دقیق و نمایش اعلان به این دسترسی‌ها نیاز داره.",
+                ),
         ),
         const SizedBox(height: 10),
         Wrap(
@@ -869,7 +907,7 @@ class _HomeScreenState extends State<HomeScreen>
               OutlinedButton(
                 onPressed: () =>
                     _permissionAction(widget.storage.openExactAlarmSettings),
-                child: const Text('زمان دقیق'),
+                child: Text(context.tr("زمان دقیق")),
               ),
             if (!status.notifications)
               OutlinedButton(
@@ -879,19 +917,19 @@ class _HomeScreenState extends State<HomeScreen>
                   if (!p.notifications)
                     await widget.storage.openNotificationSettings();
                 }),
-                child: const Text('اعلان‌ها'),
+                child: Text(context.tr("اعلان‌ها")),
               ),
             if (_needsChallengeAccess && !status.fullScreen)
               OutlinedButton(
                 onPressed: () =>
                     _permissionAction(widget.storage.openFullScreenSettings),
-                child: const Text('نمایش تمام‌صفحه'),
+                child: Text(context.tr("نمایش تمام‌صفحه")),
               ),
             if (_needsChallengeAccess && !status.overlay)
               OutlinedButton(
                 onPressed: () =>
                     _permissionAction(widget.storage.openOverlaySettings),
-                child: const Text('نمایش روی برنامه‌ها'),
+                child: Text(context.tr("نمایش روی برنامه‌ها")),
               ),
           ],
         ),
@@ -904,7 +942,7 @@ class _HomeScreenState extends State<HomeScreen>
       final status = await widget.storage.permissionStatus();
       if (mounted) setState(() => _permissions = status);
     } catch (_) {
-      _message('تنظیمات دسترسی باز نشد؛ دوباره تلاش کن.');
+      _message(context.tr("تنظیمات دسترسی باز نشد؛ دوباره تلاش کن."));
     }
   }
 }
@@ -953,11 +991,11 @@ class _NextAlarmHeroState extends State<_NextAlarmHero> {
     final remaining = alarm?.nextOccurrence(now)?.difference(now);
     final minutes = remaining == null ? 0 : (remaining.inSeconds / 60).ceil();
     final countdown = minutes < 60
-        ? '$minutes دقیقه دیگه'
-        : (minutes ~/ 60).toString() +
-              ' ساعت و ' +
-              (minutes % 60).toString() +
-              ' دقیقه دیگه';
+        ? context.tr("{p0} دقیقه دیگه", {'p0': minutes})
+        : context.tr("{p0} ساعت و {p1} دقیقه دیگه", {
+            'p0': minutes ~/ 60,
+            'p1': minutes % 60,
+          });
     return ClaySurface(
       color: Color.alphaBlend(
         scheme.primary.withValues(alpha: .08),
@@ -974,18 +1012,18 @@ class _NextAlarmHeroState extends State<_NextAlarmHero> {
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Text(
-                'بیداری بعدی',
+                context.tr("بیداری بعدی"),
                 style: Theme.of(context).textTheme.titleSmall
                     ?.copyWith(color: scheme.onSurfaceVariant),
               ),
               StatusPill(
                 alarm == null
-                    ? 'آرامش فعلاً'
+                    ? context.tr("آرامش فعلاً")
                     : widget.ready
-                    ? 'آماده زنگ'
+                    ? context.tr("آماده زنگ")
                     : widget.schedulingFailed
-                    ? 'نیاز به بررسی'
-                    : 'نیاز به دسترسی',
+                    ? context.tr("نیاز به بررسی")
+                    : context.tr("نیاز به دسترسی"),
                 icon: alarm == null
                     ? Icons.nights_stay_outlined
                     : widget.ready
@@ -1022,7 +1060,7 @@ class _NextAlarmHeroState extends State<_NextAlarmHero> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      alarm?.label ?? 'هیچ زنگ فعالی نداری',
+                      alarm?.label ?? context.tr("هیچ زنگ فعالی نداری"),
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                   ],
@@ -1052,7 +1090,7 @@ class _NextAlarmHeroState extends State<_NextAlarmHero> {
           const SizedBox(height: 18),
           Text(
             alarm == null
-                ? 'یک زنگ بساز یا زنگ‌های خاموش رو روشن کن.'
+                ? context.tr("یک زنگ بساز یا زنگ‌های خاموش رو روشن کن.")
                 : countdown,
             style: Theme.of(context).textTheme.bodyMedium
                 ?.copyWith(color: scheme.onSurfaceVariant),
@@ -1128,12 +1166,17 @@ class _AnimatedAlarmSliverState extends State<_AnimatedAlarmSliver> {
     key: _key,
     initialItemCount: _items.length,
     itemBuilder: (context, index, animation) => RepaintBoundary(
-      child: SizeTransition(
-        sizeFactor: animation.drive(CurveTween(curve: Curves.easeOutCubic)),
-        child: FadeTransition(
-          opacity: animation,
-          child: widget.builder(_items[index]),
-        ),
+      child: AnimatedBuilder(
+        animation: animation,
+        child: widget.builder(_items[index]),
+        builder: (context, child) => animation.isCompleted
+            ? child!
+            : SizeTransition(
+                sizeFactor: animation.drive(
+                  CurveTween(curve: Curves.easeOutCubic),
+                ),
+                child: FadeTransition(opacity: animation, child: child),
+              ),
       ),
     ),
   );

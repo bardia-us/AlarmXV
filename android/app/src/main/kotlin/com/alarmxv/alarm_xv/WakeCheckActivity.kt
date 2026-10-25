@@ -116,6 +116,7 @@ class WakeCheckActivity : Activity() {
 
     private fun buildScreen(label: String): View {
         val content = LinearLayout(this).apply {
+            layoutDirection = if (NativeStrings.language(this@WakeCheckActivity) == "fa") View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
             setPadding(dp(24), dp(28), dp(24), dp(28))
@@ -135,7 +136,7 @@ class WakeCheckActivity : Activity() {
             }
         }, linearParams())
         content.addView(TextView(this).apply {
-            text = "هنوز بیداری؟"
+            text = NativeStrings.text(this@WakeCheckActivity, "Still awake?")
             textSize = 28f
             gravity = Gravity.CENTER
             setTextColor(appearance.text)
@@ -150,7 +151,7 @@ class WakeCheckActivity : Activity() {
             }, linearParams(top = 8))
         }
         content.addView(TextView(this).apply {
-            text = "برای جلوگیری از زنگ دوباره، بیدار بودنت را تأیید کن."
+            text = NativeStrings.text(this@WakeCheckActivity, "Confirm you are awake to prevent the alarm from ringing again.")
             textSize = 16f
             gravity = Gravity.CENTER
             setTextColor(appearance.accent)
@@ -164,7 +165,7 @@ class WakeCheckActivity : Activity() {
         }
         content.addView(countdown, linearParams(top = 18))
         content.addView(Button(this).apply {
-            text = "بیدارم"
+            text = NativeStrings.text(this@WakeCheckActivity, "I’m awake")
             isAllCaps = false
             textSize = 18f
             setTextColor(appearance.onAccent)
@@ -175,7 +176,7 @@ class WakeCheckActivity : Activity() {
             setOnClickListener { confirmAwake() }
         }, linearParams(top = 22))
         content.addView(Button(this).apply {
-            text = "فعلاً ببند"
+            text = NativeStrings.text(this@WakeCheckActivity, "Close for now")
             isAllCaps = false
             textSize = 14f
             setTextColor(appearance.accent)

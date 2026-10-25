@@ -1,5 +1,9 @@
 # Preview verification status / وضعیت بررسی پیش‌نمایش
 
+Latest development target: **2.0.0-preview.3+5006**. See [Frosted UI/localization verification](FROSTED_UI.md): analyzer clean,39Flutter tests passed,12Native unit tests passed, explicit visual fixtures passed. This does not establish real-device frame pacing. Preview3 APK preparation is recorded separately; no preview3 phone installation or public Release yet.
+
+## Historical preview2 evidence
+
 Target: 2.0.0-preview.2+5005, based on public v1.2.0.
 
 This file records actual evidence, not promised checks. Updated at each checkpoint.

@@ -1,3 +1,5 @@
+import '../l10n/app_strings.dart';
+
 import 'package:flutter/material.dart';
 
 import '../models/app_settings.dart';
@@ -6,6 +8,7 @@ import '../theme/settings_controller.dart';
 import '../widgets/app_info_section.dart';
 import '../widgets/clay_components.dart';
 import '../widgets/theme_toggle_button.dart';
+import '../widgets/frosted_surface.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key, required this.controller});
@@ -16,7 +19,9 @@ class SettingsScreen extends StatelessWidget {
     } catch (_) {
       if (context.mounted)
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تنظیمات ذخیره نشد؛ حالت قبلی حفظ شد.')),
+          SnackBar(
+            content: Text(context.tr("تنظیمات ذخیره نشد؛ حالت قبلی حفظ شد.")),
+          ),
         );
     }
   }
@@ -27,18 +32,45 @@ class SettingsScreen extends StatelessWidget {
     builder: (context, _) {
       final settings = controller.settings;
       return Scaffold(
-        appBar: AppBar(title: const Text('تنظیمات')),
+        extendBodyBehindAppBar: true,
+        appBar: FrostedAppBar(title: Text(context.tr("تنظیمات"))),
         body: SafeArea(
+          top: false,
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 760),
               child: ListView(
-                padding: const EdgeInsets.all(22),
+                padding: EdgeInsets.fromLTRB(
+                  22,
+                  MediaQuery.paddingOf(context).top + kToolbarHeight + 22,
+                  22,
+                  22,
+                ),
                 physics: const BouncingScrollPhysics(),
                 children: [
-                  const SectionHeading(
-                    'ظاهر برنامه',
-                    subtitle: 'عمق نرم، رنگ دلخواه و آرامش بیشتر.',
+                  ClaySelectionTile<String>(
+                    label: context.tr('زبان برنامه'),
+                    value: settings.language,
+                    options: [
+                      ClaySelectionOption(
+                        value: 'system',
+                        label: context.tr('خودکار (سیستم)'),
+                        icon: Icons.language_rounded,
+                      ),
+                      const ClaySelectionOption(value: 'fa', label: 'فارسی'),
+                      const ClaySelectionOption(value: 'en', label: 'English'),
+                    ],
+                    onChanged: controller.isSaving
+                        ? null
+                        : (language) => _update(
+                            context,
+                            settings.copyWith(language: language),
+                          ),
+                  ),
+                  const SizedBox(height: 24),
+                  SectionHeading(
+                    context.tr("ظاهر برنامه"),
+                    subtitle: context.tr("عمق نرم، رنگ دلخواه و آرامش بیشتر."),
                   ),
                   ClaySurface(
                     child: Column(
@@ -50,9 +82,9 @@ class SettingsScreen extends StatelessWidget {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text(
-                                    'حالت نمایش',
-                                    style: TextStyle(
+                                  Text(
+                                    context.tr("حالت نمایش"),
+                                    style: const TextStyle(
                                       fontWeight: FontWeight.w700,
                                     ),
                                   ),
@@ -60,8 +92,8 @@ class SettingsScreen extends StatelessWidget {
                                   Text(
                                     Theme.of(context).brightness ==
                                             Brightness.dark
-                                        ? 'آرامش شب، با عمق نرم'
-                                        : 'روشن و سبک، مثل صبح',
+                                        ? context.tr("آرامش شب، با عمق نرم")
+                                        : context.tr("روشن و سبک، مثل صبح"),
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodySmall,
@@ -76,11 +108,15 @@ class SettingsScreen extends StatelessWidget {
                         const SizedBox(height: 12),
                         SwitchListTile(
                           contentPadding: EdgeInsets.zero,
-                          title: const Text('هماهنگ با سیستم'),
+                          title: Text(context.tr("هماهنگ با سیستم")),
                           subtitle: Text(
                             settings.themeMode == ThemeMode.system
-                                ? 'حالت روشن و تیره با گوشی تغییر می‌کنه.'
-                                : 'انتخاب دستی فعاله؛ با دکمهٔ ماه و خورشید عوضش کن.',
+                                ? context.tr(
+                                    "حالت روشن و تیره با گوشی تغییر می‌کنه.",
+                                  )
+                                : context.tr(
+                                    "انتخاب دستی فعاله؛ با دکمهٔ ماه و خورشید عوضش کن.",
+                                  ),
                           ),
                           value: settings.themeMode == ThemeMode.system,
                           onChanged: controller.isSaving
@@ -98,9 +134,9 @@ class SettingsScreen extends StatelessWidget {
                                 ),
                         ),
                         const SizedBox(height: 22),
-                        const Text(
-                          'رنگ اصلی',
-                          style: TextStyle(fontWeight: FontWeight.w700),
+                        Text(
+                          context.tr("رنگ اصلی"),
+                          style: const TextStyle(fontWeight: FontWeight.w700),
                         ),
                         const SizedBox(height: 12),
                         Wrap(
@@ -117,7 +153,7 @@ class SettingsScreen extends StatelessWidget {
                                     shape: BoxShape.circle,
                                   ),
                                 ),
-                                label: Text(accent.label),
+                                label: Text(context.tr(accent.label)),
                                 selected: settings.accent == accent,
                                 onSelected: controller.isSaving
                                     ? null
@@ -132,15 +168,17 @@ class SettingsScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 26),
-                  const SectionHeading(
-                    'پیش‌فرض زنگ جدید',
-                    subtitle: 'این تغییر، زنگ‌های قبلی رو عوض نمی‌کنه.',
+                  SectionHeading(
+                    context.tr("پیش‌فرض زنگ جدید"),
+                    subtitle: context.tr(
+                      "این تغییر، زنگ‌های قبلی رو عوض نمی‌کنه.",
+                    ),
                   ),
                   ClaySurface(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('مدت تعویق'),
+                        Text(context.tr("مدت تعویق")),
                         const SizedBox(height: 12),
                         Wrap(
                           spacing: 8,
@@ -150,8 +188,10 @@ class SettingsScreen extends StatelessWidget {
                               ChoiceChip(
                                 label: Text(
                                   minutes == 0
-                                      ? 'بدون تعویق'
-                                      : '$minutes دقیقه',
+                                      ? context.tr("بدون تعویق")
+                                      : context.tr("{p0} دقیقه", {
+                                          'p0': minutes,
+                                        }),
                                 ),
                                 selected:
                                     settings.defaultSnoozeMinutes == minutes,
@@ -170,7 +210,7 @@ class SettingsScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 26),
-                  const SectionHeading('حرکت و دسترس‌پذیری'),
+                  SectionHeading(context.tr("حرکت و دسترس‌پذیری")),
                   ClaySurface(
                     elevated: false,
                     child: Row(
@@ -181,16 +221,18 @@ class SettingsScreen extends StatelessWidget {
                           color: Theme.of(context).colorScheme.primary,
                         ),
                         const SizedBox(width: 14),
-                        const Expanded(
+                        Expanded(
                           child: Text(
-                            'اندازه متن و کاهش حرکت از تنظیمات گوشی پیروی می‌کنن. با روشن‌بودن کاهش حرکت، بازخورد لرزشی و انیمیشن‌های تزئینی خاموش می‌شن.',
+                            context.tr(
+                              "اندازه متن و کاهش حرکت از تنظیمات گوشی پیروی می‌کنن. با روشن‌بودن کاهش حرکت، بازخورد لرزشی و انیمیشن‌های تزئینی خاموش می‌شن.",
+                            ),
                           ),
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 26),
-                  const SectionHeading('درباره و به‌روزرسانی'),
+                  SectionHeading(context.tr("درباره و به‌روزرسانی")),
                   const AppInfoSection(),
                   const SizedBox(height: 20),
                 ],

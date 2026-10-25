@@ -173,7 +173,7 @@ class MainActivity : FlutterActivity() {
         }
         val title = runCatching {
             RingtoneManager.getRingtone(this, uri)?.getTitle(this)
-        }.getOrNull().orEmpty().ifBlank { "System alarm sound" }
+        }.getOrNull().orEmpty().ifBlank { NativeStrings.text(this@MainActivity, "System alarm sound") }
         result.success(mapOf("uri" to uri.toString(), "name" to title))
     }
 
@@ -241,7 +241,7 @@ class MainActivity : FlutterActivity() {
                 putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true)
                 putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, false)
                 putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, selectedUri)
-                putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, "Choose alarm sound")
+                putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, NativeStrings.text(this@MainActivity, "Choose alarm sound"))
             },
             ringtonePickerRequestCode,
         )

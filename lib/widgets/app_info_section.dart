@@ -1,3 +1,5 @@
+import '../l10n/app_strings.dart';
+
 import 'package:flutter/material.dart';
 
 import '../services/update_service.dart';
@@ -17,7 +19,7 @@ class WhatsNewSheet {
 
   static Future<void> show(
     BuildContext context, {
-    String version = '2.0.0-preview.2',
+    String version = '2.0.0-preview.3',
   }) => showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -36,7 +38,7 @@ class WhatsNewSheet {
             ),
             const SizedBox(height: 16),
             Text(
-              'تازه‌های AlarmXV',
+              context.tr("تازه‌های AlarmXV"),
               style: Theme.of(context).textTheme.headlineSmall,
               textAlign: TextAlign.center,
             ),
@@ -47,31 +49,53 @@ class WhatsNewSheet {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-            for (final item in const [
+            for (final item in [
+              (
+                Icons.blur_on_rounded,
+                context.tr('سطوح مات و پس‌زمینهٔ واقعی'),
+                context.tr(
+                  'نوارهای ثابت و منوها با بلور محدود و متن واضح؛ بدون افکت لنزی.',
+                ),
+              ),
+              (
+                Icons.language_rounded,
+                context.tr('دو زبان، یک تجربه'),
+                context.tr(
+                  'فارسی و انگلیسی با انتخاب خودکار زبان سیستم؛ قابل تغییر از تنظیمات.',
+                ),
+              ),
               (
                 Icons.alarm_on_rounded,
-                'زنگ عادی یا بیداری مأموریتی',
-                'حالت عادی را مستقیم قطع کن؛ از صدای فعلی گوشی یا بلندی دلخواه استفاده کن. حالت مأموریتی جدا باقی مانده.',
+                context.tr("زنگ عادی یا بیداری مأموریتی"),
+                context.tr(
+                  "حالت عادی را مستقیم قطع کن؛ از صدای فعلی گوشی یا بلندی دلخواه استفاده کن. حالت مأموریتی جدا باقی مانده.",
+                ),
               ),
               (
                 Icons.palette_outlined,
-                'یک ظاهر تازه',
-                'طراحی نرم Clay، منوهای گرد و نوارهای پایین با محوشدن ملایم؛ بدون افکت شیشه‌ای سنگین.',
+                context.tr("یک ظاهر تازه"),
+                context.tr(
+                  "طراحی نرم Clay، منوهای گرد و نوارهای پایین با محوشدن ملایم؛ بدون افکت شیشه‌ای سنگین.",
+                ),
               ),
               (
                 Icons.folder_outlined,
-                'آلارم‌های مرتب‌تر',
-                'گروه‌ها، جست‌وجو، تکثیر و نمایش آلارم بعدی.',
+                context.tr("آلارم‌های مرتب‌تر"),
+                context.tr("گروه‌ها، جست‌وجو، تکثیر و نمایش آلارم بعدی."),
               ),
               (
                 Icons.extension_outlined,
-                'بیدارشدن با انتخاب خودت',
-                'تنظیم سختی مأموریت‌ها؛ تایپ و ترتیب اعداد کنار ریاضی، حافظه و تکان‌دادن.',
+                context.tr("بیدارشدن با انتخاب خودت"),
+                context.tr(
+                  "تنظیم سختی مأموریت‌ها؛ تایپ و ترتیب اعداد کنار ریاضی، حافظه و تکان‌دادن.",
+                ),
               ),
               (
                 Icons.system_update_rounded,
-                'آپدیت با یک لمس',
-                'بررسی دستی نسخه جدید و پیشنهاد فایل مناسب گوشی از GitHub.',
+                context.tr("آپدیت با یک لمس"),
+                context.tr(
+                  "بررسی دستی نسخه جدید و پیشنهاد فایل مناسب گوشی از GitHub.",
+                ),
               ),
             ])
               Padding(
@@ -99,7 +123,7 @@ class WhatsNewSheet {
               ),
             FilledButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('بریم سراغش'),
+              child: Text(context.tr("بریم سراغش")),
             ),
           ],
         ),
@@ -127,7 +151,7 @@ class _AppInfoSectionState extends State<AppInfoSection> {
     try {
       await _service.openUrl(url);
     } catch (_) {
-      _message('مرورگر باز نشد؛ دوباره امتحان کن.');
+      _message(context.tr("مرورگر باز نشد؛ دوباره امتحان کن."));
     }
   }
 
@@ -141,14 +165,16 @@ class _AppInfoSectionState extends State<AppInfoSection> {
       if (AppVersion.parse(release.version)
               .compareTo(AppVersion.parse(info.versionName)) <=
           0) {
-        _message('نسخه جدیدتری منتشر نشده؛ به‌روزی.');
+        _message(context.tr("نسخه جدیدتری منتشر نشده؛ به‌روزی."));
         return;
       }
       final asset = release.recommendedAsset(info.supportedAbis);
       await showDialog<void>(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text('نسخه ${release.version} آماده است'),
+          title: Text(
+            context.tr("نسخه {p0} آماده است", {'p0': release.version}),
+          ),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -156,8 +182,13 @@ class _AppInfoSectionState extends State<AppInfoSection> {
               children: [
                 Text(
                   asset == null
-                      ? 'فایل سازگار پیدا نشد؛ فهرست دانلودها در مرورگر باز می‌شود.'
-                      : 'پیشنهاد برای این گوشی: ${asset.abi}\nدانلود و نصب را در مرورگر ادامه بده.',
+                      ? context.tr(
+                          "فایل سازگار پیدا نشد؛ فهرست دانلودها در مرورگر باز می‌شود.",
+                        )
+                      : context.tr(
+                          "پیشنهاد برای این گوشی: {p0}\nدانلود و نصب را در مرورگر ادامه بده.",
+                          {'p0': asset.abi},
+                        ),
                 ),
                 if (release.notes.trim().isNotEmpty) ...[
                   const SizedBox(height: 16),
@@ -173,21 +204,23 @@ class _AppInfoSectionState extends State<AppInfoSection> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('بعداً'),
+              child: Text(context.tr("بعداً")),
             ),
             FilledButton(
               onPressed: () {
                 Navigator.pop(context);
                 _open(asset?.url ?? release.page);
               },
-              child: const Text('دانلود در مرورگر'),
+              child: Text(context.tr("دانلود در مرورگر")),
             ),
           ],
         ),
       );
     } catch (_) {
       _message(
-        'بررسی آپدیت ممکن نشد. اینترنت یا دسترسی GitHub را بررسی کن و دوباره بزن.',
+        context.tr(
+          "بررسی آپدیت ممکن نشد. اینترنت یا دسترسی GitHub را بررسی کن و دوباره بزن.",
+        ),
       );
     } finally {
       if (mounted) setState(() => _checking = false);
@@ -200,23 +233,23 @@ class _AppInfoSectionState extends State<AppInfoSection> {
       ListTile(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         leading: const Icon(Icons.balance_rounded),
-        title: const Text('متن‌باز با مجوز GPL-3.0'),
-        subtitle: const Text('مجوز برنامه و کتابخانه‌ها'),
+        title: Text(context.tr("متن‌باز با مجوز GPL-3.0")),
+        subtitle: Text(context.tr("مجوز برنامه و کتابخانه‌ها")),
         onTap: () =>
             showLicensePage(context: context, applicationName: 'AlarmXV'),
       ),
       ListTile(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         leading: const Icon(Icons.auto_awesome_outlined),
-        title: const Text('تازه‌های نسخه'),
+        title: Text(context.tr("تازه‌های نسخه")),
         trailing: const Icon(Icons.chevron_left_rounded),
         onTap: () => WhatsNewSheet.show(context),
       ),
       ListTile(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         leading: const Icon(Icons.code_rounded),
-        title: const Text('AlarmXV در GitHub'),
-        subtitle: const Text('متن‌باز، ساخته‌شده برای بیدارشدن'),
+        title: Text(context.tr("AlarmXV در GitHub")),
+        subtitle: Text(context.tr("متن‌باز، ساخته‌شده برای بیدارشدن")),
         trailing: const Icon(Icons.open_in_new_rounded),
         onTap: () => _open(Uri.parse(UpdateService.projectUrl)),
       ),
@@ -228,8 +261,12 @@ class _AppInfoSectionState extends State<AppInfoSection> {
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
             : const Icon(Icons.system_update_rounded),
-        title: Text(_checking ? 'در حال بررسی…' : 'بررسی به‌روزرسانی'),
-        subtitle: const Text('فقط با درخواست تو؛ دانلود از مرورگر'),
+        title: Text(
+          _checking
+              ? context.tr("در حال بررسی…")
+              : context.tr("بررسی به‌روزرسانی"),
+        ),
+        subtitle: Text(context.tr("فقط با درخواست تو؛ دانلود از مرورگر")),
         onTap: _checking ? null : _check,
       ),
     ],

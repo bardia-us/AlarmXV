@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'alarm_group.dart';
 
 enum AccentPalette {
@@ -14,6 +15,7 @@ enum AccentPalette {
 
 class AppSettings {
   const AppSettings({
+    this.language = 'system',
     this.themeMode = ThemeMode.system,
     this.accent = AccentPalette.ocean,
     this.groups = const [],
@@ -21,16 +23,21 @@ class AppSettings {
   });
 
   final ThemeMode themeMode;
+
+  /// Missing legacy values follow the system; unsupported languages use English.
+  final String language;
   final AccentPalette accent;
   final List<AlarmGroup> groups;
   final int defaultSnoozeMinutes;
 
   AppSettings copyWith({
+    String? language,
     ThemeMode? themeMode,
     AccentPalette? accent,
     List<AlarmGroup>? groups,
     int? defaultSnoozeMinutes,
   }) => AppSettings(
+    language: language ?? this.language,
     themeMode: themeMode ?? this.themeMode,
     accent: accent ?? this.accent,
     groups: groups == null ? this.groups : List.unmodifiable(groups),
@@ -39,6 +46,7 @@ class AppSettings {
 
   Map<String, Object> toJson() => {
     'schemaVersion': 2,
+    'language': language,
     'themeMode': themeMode.name,
     'accent': accent.name,
     'groups': groups.map((group) => group.toJson()).toList(),
@@ -53,6 +61,9 @@ class AppSettings {
             .toList()
           ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
     return AppSettings(
+      language: const {'system', 'fa', 'en'}.contains(json['language'])
+          ? json['language'] as String
+          : 'system',
       themeMode:
           ThemeMode.values
               .where((mode) => mode.name == json['themeMode'])

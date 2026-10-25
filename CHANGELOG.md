@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.0.0-preview.3+5006 — Private preview / پیش‌نمایش خصوصی
+
+### فارسی
+- نوار بالای تنظیمات، خانه و گروه‌ها و نوار ثابت دکمه‌ها از پس‌زمینهٔ واقعی با بلور محدود استفاده می‌کنند؛ متن و آیکون‌ها واضح باقی می‌مانند.
+- منوهای بازشونده و انتخابگرها متریال Frosted یکپارچه و گذار مشترک سطح/محتوا دارند؛ کاهش افکت و کنتراست بالا از سطح مات استفاده می‌کنند.
+- اصلاح بریدگی مستطیلی سایهٔ کارت آلارم پس از پایان انیمیشن و گوشه‌های انتخاب ساعت؛ دکمهٔ برگشت گرد با کشش ملایم.
+- فارسی و انگلیسی در رابط Flutter، زنگ Native، مأموریت‌ها و بررسی بیداری؛ پیش‌فرض زبان سیستم و انتخاب دستی در تنظیمات، بدون تغییر نام‌ها و عبارت‌های ذخیره‌شدهٔ کاربر.
+- نسخه و تازه‌های نصب به‌روز شدند. شواهد تست و محدودیت عملکرد در docs/qa/FROSTED_UI.md ثبت می‌شود؛ انتشار عمومی انجام نشده است.
+
+### English
+- Real clipped backdrop blur for Home, Settings and Groups app bars and fixed action footers, with sharp text and icons.
+- Unified frosted popup/selection panels with one material/content transition and opaque reduced-effects/high-contrast fallback.
+- Removed settled list-animation clipping of rounded alarm-card shadows; rounded time selections and an elastic Back button.
+- System-default Persian/English, with a persisted manual preference across Flutter and native alarm/mission/wake-check interfaces. User labels and typing phrases remain unchanged.
+- Updated version and in-app release notes. Verification evidence and performance limits are recorded separately; no public Release.
+
 ## 2.0.0-preview.2+5005 — Private preview / پیش‌نمایش خصوصی
 
 ### فارسی

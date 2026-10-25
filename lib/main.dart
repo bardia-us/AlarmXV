@@ -1,6 +1,9 @@
+import 'l10n/app_strings.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'screens/home_screen.dart';
 import 'services/alarm_storage.dart';
@@ -47,6 +50,16 @@ class _AlarmXvAppState extends State<AlarmXvApp> {
     builder: (context, _) => MaterialApp(
       title: 'AlarmXV',
       debugShowCheckedModeBanner: false,
+      locale: _settings.settings.language == 'system'
+          ? null
+          : Locale(_settings.settings.language),
+      supportedLocales: AppStrings.supportedLocales,
+      localizationsDelegates: const [
+        AppStrings.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       theme: buildClayTheme(Brightness.light, _settings.settings.accent),
       darkTheme: buildClayTheme(Brightness.dark, _settings.settings.accent),
       themeMode: _settings.settings.themeMode,
@@ -78,34 +91,36 @@ class _AlarmXvAppState extends State<AlarmXvApp> {
             systemNavigationBarContrastEnforced: false,
             systemStatusBarContrastEnforced: false,
           ),
-          child: Directionality(
-            textDirection: TextDirection.rtl,
-            child: child!,
-          ),
+          child: child!,
         );
       },
       home: _settings.isLoaded
           ? HomeScreen(storage: widget.storage, settings: _settings)
-          : Scaffold(
-              body: Center(
-                child: _settings.error == null
-                    ? const CircularProgressIndicator()
-                    : Padding(
-                        padding: const EdgeInsets.all(32),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.cloud_off_rounded, size: 48),
-                            const SizedBox(height: 16),
-                            Text(_settings.error!, textAlign: TextAlign.center),
-                            const SizedBox(height: 16),
-                            FilledButton(
-                              onPressed: _settings.load,
-                              child: const Text('تلاش دوباره'),
-                            ),
-                          ],
+          : Builder(
+              builder: (context) => Scaffold(
+                body: Center(
+                  child: _settings.error == null
+                      ? const CircularProgressIndicator()
+                      : Padding(
+                          padding: const EdgeInsets.all(32),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.cloud_off_rounded, size: 48),
+                              const SizedBox(height: 16),
+                              Text(
+                                context.tr(_settings.error!),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 16),
+                              FilledButton(
+                                onPressed: _settings.load,
+                                child: Text(context.tr("تلاش دوباره")),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
+                ),
               ),
             ),
     ),

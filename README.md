@@ -40,6 +40,8 @@ AlarmXV برای وقتی ساخته شده که دکمهٔ خاموش‌کرد�
 
 تغییر روشن/تیره با دکمهٔ ماه و خورشید بالای صفحه انجام می‌شود؛ پیش‌فرض از سیستم پیروی می‌کند. نوار ناوبری Android در دسترس می‌ماند و منوها و دکمه‌های پایین از شکل و عمق مشترک Clay استفاده می‌کنند.
 
+در preview3 نوارهای ثابت و منوها از Frosted translucency با پس‌زمینهٔ واقعی و متن واضح استفاده می‌کنند. فارسی و انگلیسی هم با پیش‌فرض زبان سیستم و انتخاب دستی در تنظیمات در دسترس‌اند. [گزارش بررسی ظاهر](docs/qa/FROSTED_UI.md) نتیجهٔ تست محلی را از اندازه‌گیری واقعی گوشی جدا می‌کند.
+
 این پیش‌نمایش هنوز انتشار عمومی نیست. [وضعیت بررسی و تست‌ها](docs/qa/STATUS.md) محدودیت‌ها و نتیجهٔ واقعی هر مرحله را ثبت می‌کند؛ نسخهٔ پایدار فعلی همان 1.2.0 است.
 
 ### کدام فایل دانلود؟
@@ -71,6 +73,8 @@ A coherent soft-depth Clay interface; light, dark and system themes; eight accen
 Choose **Normal alarm** for direct dismissal and freely adjustable system/custom volume, or **Mission alarm** for the stricter wake-up flow. Normal alarms do not enforce maximum volume or mandatory wake checks.
 
 The animated moon/sun control switches appearance while system following remains the default. Android navigation stays available; rounded menus and floating action edges share the same Clay surfaces.
+
+Preview3 adds real frosted backdrops to fixed chrome and menus, plus system-default Persian/English with an in-app language choice. The [visual verification report](docs/qa/FROSTED_UI.md) distinguishes host rendering checks from real-device performance measurements.
 
 The preview is not a public release. See the [QA status](docs/qa/STATUS.md) for completed checks and device-test limitations. Version 1.2.0 remains the current public release.
 

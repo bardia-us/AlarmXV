@@ -30,6 +30,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     var settings = <String, dynamic>{
       'themeMode': 'light',
+      'language': 'fa',
       'groups': [
         {
           'id': 'work',
@@ -93,8 +94,8 @@ void main() {
           .setMockMethodCallHandler(channel, null),
     );
     const key = ValueKey('capture');
-    Future<void> capture(String name) async {
-      await tester.pumpAndSettle();
+    Future<void> capture(String name, {bool settle = true}) async {
+      if (settle) await tester.pumpAndSettle();
       final boundary = tester.renderObject<RenderRepaintBoundary>(
         find.byKey(key),
       );
@@ -112,20 +113,64 @@ void main() {
       const RepaintBoundary(key: key, child: AlarmXvApp()),
     );
     await capture('home-light');
+    await tester.tap(find.byTooltip('مرتب‌سازی'));
+    await tester.pump(const Duration(milliseconds: 70));
+    await capture('sort-menu-opening', settle: false);
+    await capture('sort-menu-light');
+    await tester.binding.handlePopRoute();
+    await tester.pump(const Duration(milliseconds: 70));
+    await capture('sort-menu-closing', settle: false);
+    await tester.pumpAndSettle();
     await tester.tap(find.text('زنگ جدید'));
     await capture('editor');
-    await tester.tap(find.byTooltip('بستن ویرایشگر'));
+    await tester.tap(find.text('برای تغییر ساعت بزن'));
+    await capture('time-picker');
+    await tester.tap(find.text('انصراف'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('گروه زنگ'));
+    await tester.tap(find.text('گروه زنگ'));
+    await capture('group-selection-light');
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    await tester.drag(
+      find.byType(SingleChildScrollView).last,
+      const Offset(0, -400),
+    );
+    await capture('editor-footer');
+    await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(ActionChip, 'گروه‌ها'));
+    await tester.pumpAndSettle();
+    expect(find.text('گروه‌های زنگ'), findsOneWidget);
     await capture('groups');
-    await tester.pageBack();
+    await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('تنظیمات'));
     await capture('settings-light');
+    await tester.drag(find.byType(ListView).last, const Offset(0, -400));
+    await capture('settings-light-scrolled');
+    await tester.drag(find.byType(ListView).last, const Offset(0, 800));
+    await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('رفتن به حالت تیره'));
     await capture('settings-dark');
-    await tester.pageBack();
-    await capture('home-dark');
+    await tester.drag(find.byType(ListView).last, const Offset(0, -400));
+    await capture('settings-dark-scrolled');
+    await tester.drag(find.byType(ListView).last, const Offset(0, 800));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('زبان برنامه'));
+    await capture('language-selection-dark');
+    await tester.tap(find.text('English'));
+    await capture('settings-english-dark');
+    await tester.tap(find.byTooltip('Switch to light mode'));
+    await capture('settings-english-light');
+    await tester.binding.handlePopRoute();
+    await capture('home-english-light');
+    await tester.tap(find.text('New alarm'));
+    await capture('editor-english-light');
+    await tester.tap(find.byTooltip('Close editor'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Switch to dark mode'));
+    await capture('home-english-dark');
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   }, skip: !const bool.fromEnvironment('ALARMXV_CAPTURE_UI'));

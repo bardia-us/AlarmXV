@@ -1,4 +1,6 @@
 import 'package:alarm_xv/widgets/app_info_section.dart';
+import 'package:alarm_xv/l10n/app_strings.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -30,6 +32,12 @@ void main() {
       );
       await tester.pumpWidget(
         MaterialApp(
+          locale: const Locale('fa'),
+          supportedLocales: AppStrings.supportedLocales,
+          localizationsDelegates: const [
+            AppStrings.delegate,
+            ...GlobalMaterialLocalizations.delegates,
+          ],
           home: Scaffold(
             body: Builder(
               builder: (context) => TextButton(

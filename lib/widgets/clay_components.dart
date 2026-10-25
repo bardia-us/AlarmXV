@@ -1,7 +1,10 @@
+import '../l10n/app_strings.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../theme/clay_theme.dart';
+import 'frosted_surface.dart';
 
 bool reduceMotion(BuildContext context) =>
     MediaQuery.disableAnimationsOf(context) ||
@@ -199,7 +202,7 @@ class NumberControl extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton.filledTonal(
-              tooltip: 'کم‌کردن $label',
+              tooltip: context.tr("کم‌کردن {p0}", {'p0': label}),
               onPressed: value > min
                   ? () => onChanged((value - step).clamp(min, max))
                   : null,
@@ -213,7 +216,7 @@ class NumberControl extends StatelessWidget {
               ),
             ),
             IconButton.filledTonal(
-              tooltip: 'زیادکردن $label',
+              tooltip: context.tr("زیادکردن {p0}", {'p0': label}),
               onPressed: value < max
                   ? () => onChanged((value + step).clamp(min, max))
                   : null,
@@ -239,26 +242,14 @@ class NumberControl extends StatelessWidget {
 }
 
 /// A floating action edge. Place above scroll content in a Stack and reserve
-/// equivalent bottom scroll padding; there is no opaque footer strip.
+/// equivalent bottom scroll padding. A single clipped filter samples the list.
 class ClayActionFooter extends StatelessWidget {
   const ClayActionFooter({super.key, required this.child});
   final Widget child;
   @override
   Widget build(BuildContext context) {
     final tokens = ClayTokens.of(context);
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          stops: const [0, .48, 1],
-          colors: [
-            tokens.canvas.withValues(alpha: 0),
-            tokens.canvas.withValues(alpha: .88),
-            tokens.canvas.withValues(alpha: .98),
-          ],
-        ),
-      ),
+    return FrostedSurface(
       child: SafeArea(
         top: false,
         child: Center(
@@ -266,7 +257,7 @@ class ClayActionFooter extends StatelessWidget {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 760),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(22, 28, 22, 14),
+              padding: const EdgeInsets.fromLTRB(22, 16, 22, 14),
               child: SizedBox(
                 width: double.infinity,
                 child: DecoratedBox(
@@ -315,10 +306,8 @@ class ClaySelectionTile<T> extends StatelessWidget {
 
   Future<void> _choose(BuildContext context) async {
     FocusManager.instance.primaryFocus?.unfocus();
-    final selected = await showModalBottomSheet<T>(
+    final selected = await showFrostedBottomSheet<T>(
       context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
       builder: (context) => ConstrainedBox(
         constraints: BoxConstraints(
           maxHeight: MediaQuery.sizeOf(context).height * .76,
@@ -349,7 +338,7 @@ class ClaySelectionTile<T> extends StatelessWidget {
                       ),
                     ),
                     IconButton(
-                      tooltip: 'بستن انتخاب',
+                      tooltip: context.tr("بستن انتخاب"),
                       onPressed: () => Navigator.pop(context),
                       icon: const Icon(Icons.close_rounded),
                     ),
@@ -373,12 +362,9 @@ class ClaySelectionTile<T> extends StatelessWidget {
                       child: ClaySurface(
                         elevated: active,
                         radius: 22,
-                        color: active
-                            ? Color.alphaBlend(
-                                scheme.primary.withValues(alpha: .12),
-                                ClayTokens.of(context).surface,
-                              )
-                            : null,
+                        color: scheme.primary.withValues(
+                          alpha: active ? .12 : .025,
+                        ),
                         onTap: () => Navigator.pop(context, option.value),
                         padding: const EdgeInsets.all(18),
                         child: Row(
@@ -492,7 +478,7 @@ Future<bool> confirmAction(
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('انصراف'),
+            child: Text(context.tr("انصراف")),
           ),
           FilledButton(
             style: destructive

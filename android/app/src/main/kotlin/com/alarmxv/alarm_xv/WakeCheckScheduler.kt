@@ -177,10 +177,10 @@ object WakeCheckScheduler {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val channel = NotificationChannel(
             channelId,
-            "Silent wake-up checks",
+            NativeStrings.text(context, "Silent wake-up checks"),
             NotificationManager.IMPORTANCE_DEFAULT,
         ).apply {
-            description = "Silent confirmations; missed checks restart the real alarm"
+            description = NativeStrings.text(context, "Silent confirmations; missed checks restart the real alarm")
             setSound(null, null)
             enableVibration(false)
             lockscreenVisibility = Notification.VISIBILITY_PUBLIC
@@ -250,8 +250,8 @@ object WakeCheckScheduler {
         }
         builder
             .setSmallIcon(R.drawable.ic_stat_alarm)
-            .setContentTitle("هنوز بیداری؟")
-            .setContentText("تا پایان شمارش، بیدار بودنت را تأیید کن")
+            .setContentTitle(NativeStrings.text(context, "Still awake?"))
+            .setContentText(NativeStrings.text(context, "Confirm you are awake before the countdown ends"))
             .setCategory(Notification.CATEGORY_REMINDER)
             .setVisibility(Notification.VISIBILITY_PUBLIC)
             .setPriority(Notification.PRIORITY_DEFAULT)
@@ -266,7 +266,7 @@ object WakeCheckScheduler {
             .addAction(
                 Notification.Action.Builder(
                     null,
-                    "بیدارم",
+                    NativeStrings.text(context, "I’m awake"),
                     confirmIntent,
                 ).build(),
             )

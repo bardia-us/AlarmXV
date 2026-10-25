@@ -178,11 +178,11 @@ class RingingService : Service() {
             .setContentTitle(alarm.label)
             .setContentText(
                 if (alarm.isNormal) {
-                    "آلارم معمولی · امکان قطع مستقیم از اعلان"
+                    NativeStrings.text(this@RingingService, "Normal alarm · dismiss directly from the notification")
                 } else if (challengeInProgress) {
-                    "Challenge timer is running"
+                    NativeStrings.text(this@RingingService, "Challenge timer is running")
                 } else {
-                    "Alarm ringing - tap to wake up"
+                    NativeStrings.text(this@RingingService, "Alarm ringing - tap to wake up")
                 },
             )
             .setCategory(Notification.CATEGORY_ALARM)
@@ -203,7 +203,7 @@ class RingingService : Service() {
                             putExtra(extraSessionToken, sessionToken)
                         }, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
                     )
-                    addAction(Notification.Action.Builder(null, "قطع آلارم", dismiss).build())
+                    addAction(Notification.Action.Builder(null, NativeStrings.text(this@RingingService, "Dismiss alarm"), dismiss).build())
                 }
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_IMMEDIATE)
@@ -242,6 +242,7 @@ class RingingService : Service() {
         val windowManager = getSystemService(WindowManager::class.java)
         val appearance = NativeAppearance(this)
         val content = LinearLayout(this).apply {
+            layoutDirection = if (NativeStrings.language(this@RingingService) == "fa") View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
             setPadding(dp(28), dp(28), dp(28), dp(28))
@@ -266,9 +267,9 @@ class RingingService : Service() {
             ).apply { topMargin = dp(8) })
             addView(TextView(this@RingingService).apply {
                 text = if (challengeInProgress) {
-                    "Challenge in progress — return before time runs out"
+                    NativeStrings.text(this@RingingService, "Challenge in progress — return before time runs out")
                 } else {
-                    "Alarm is ringing"
+                    NativeStrings.text(this@RingingService, "Alarm is ringing")
                 }
                 textSize = 16f
                 setTextColor(appearance.accent)
@@ -278,7 +279,7 @@ class RingingService : Service() {
                 LinearLayout.LayoutParams.WRAP_CONTENT,
             ).apply { topMargin = dp(18) })
             addView(Button(this@RingingService).apply {
-                text = "Return to alarm"
+                text = NativeStrings.text(this@RingingService, "Return to alarm")
                 isAllCaps = false
                 textSize = 18f
                 setTextColor(appearance.onAccent)
@@ -518,10 +519,10 @@ class RingingService : Service() {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
             val channel = NotificationChannel(
                 channelId,
-                "Ringing alarms",
+                NativeStrings.text(context, "Ringing alarms"),
                 NotificationManager.IMPORTANCE_HIGH,
             ).apply {
-                description = "Full-screen notifications for active AlarmXV alarms"
+                description = NativeStrings.text(context, "Full-screen notifications for active AlarmXV alarms")
                 lockscreenVisibility = Notification.VISIBILITY_PUBLIC
                 setSound(null, null)
                 enableVibration(false)

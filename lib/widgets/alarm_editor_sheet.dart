@@ -1,3 +1,5 @@
+import '../l10n/app_strings.dart';
+
 import 'package:flutter/material.dart';
 
 import '../challenges/challenge_type.dart';
@@ -10,12 +12,12 @@ import '../theme/clay_theme.dart';
 import '../screens/group_manager_screen.dart';
 import 'clay_components.dart';
 
-String missionName(ChallengeType type) => switch (type) {
-  ChallengeType.math => 'ریاضی',
-  ChallengeType.memory => 'حافظه',
-  ChallengeType.shake => 'تکان‌دادن',
-  ChallengeType.typing => 'تایپ عبارت',
-  ChallengeType.order => 'ترتیب اعداد',
+String missionName(BuildContext context, ChallengeType type) => switch (type) {
+  ChallengeType.math => context.tr("ریاضی"),
+  ChallengeType.memory => context.tr("حافظه"),
+  ChallengeType.shake => context.tr("تکان‌دادن"),
+  ChallengeType.typing => context.tr("تایپ عبارت"),
+  ChallengeType.order => context.tr("ترتیب اعداد"),
 };
 IconData missionIcon(ChallengeType type) => switch (type) {
   ChallengeType.math => Icons.calculate_outlined,
@@ -101,12 +103,12 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
     final result = await showTimePicker(
       context: context,
       initialTime: _time,
-      helpText: 'زمان بیداری',
-      cancelText: 'انصراف',
-      confirmText: 'تأیید',
+      helpText: context.tr("زمان بیداری"),
+      cancelText: context.tr("انصراف"),
+      confirmText: context.tr("تأیید"),
       builder: (context, child) => MediaQuery(
         data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
-        child: Directionality(textDirection: TextDirection.rtl, child: child!),
+        child: child!,
       ),
     );
     if (result != null && mounted) setState(() => _time = result);
@@ -124,8 +126,10 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
     } catch (_) {
       if (mounted)
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('انتخاب صدای گوشی باز نشد؛ دوباره امتحان کن.'),
+          SnackBar(
+            content: Text(
+              context.tr("انتخاب صدای گوشی باز نشد؛ دوباره امتحان کن."),
+            ),
           ),
         );
     } finally {
@@ -144,7 +148,9 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
         id:
             widget.alarm?.id ??
             DateTime.now().microsecondsSinceEpoch.toString(),
-        label: _label.text.trim().isEmpty ? 'زنگ بیداری' : _label.text.trim(),
+        label: _label.text.trim().isEmpty
+            ? context.tr("زنگ بیداری")
+            : _label.text.trim(),
         hour: _time.hour,
         minute: _time.minute,
         weekdays: Set.unmodifiable(_days),
@@ -227,8 +233,8 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
                                   Expanded(
                                     child: Text(
                                       widget.alarm == null
-                                          ? 'یک بیداری تازه'
-                                          : 'ویرایش زنگ',
+                                          ? context.tr("یک بیداری تازه")
+                                          : context.tr("ویرایش زنگ"),
                                       style: theme.textTheme.titleLarge
                                           ?.copyWith(
                                             fontWeight: FontWeight.w800,
@@ -236,7 +242,7 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
                                     ),
                                   ),
                                   IconButton(
-                                    tooltip: 'بستن ویرایشگر',
+                                    tooltip: context.tr("بستن ویرایشگر"),
                                     onPressed: () => Navigator.pop(context),
                                     icon: const Icon(Icons.close_rounded),
                                   ),
@@ -255,7 +261,7 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
                                 child: Column(
                                   children: [
                                     Text(
-                                      'زمان زنگ',
+                                      context.tr("زمان زنگ"),
                                       style: theme.textTheme.labelLarge,
                                     ),
                                     const SizedBox(height: 8),
@@ -284,14 +290,14 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
                                       ),
                                     ),
                                     const SizedBox(height: 6),
-                                    const Text('برای تغییر ساعت بزن'),
+                                    Text(context.tr("برای تغییر ساعت بزن")),
                                   ],
                                 ),
                               ),
                             ),
                             const SizedBox(height: 22),
                             _section(
-                              'نوع زنگ',
+                              context.tr("نوع زنگ"),
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -304,7 +310,7 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
                                           Icons.alarm_rounded,
                                           size: 18,
                                         ),
-                                        label: const Text('زنگ عادی'),
+                                        label: Text(context.tr("زنگ عادی")),
                                         selected: !_isChallenge,
                                         onSelected: (_) => setState(
                                           () => _mode = AlarmMode.normal,
@@ -315,7 +321,9 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
                                           Icons.bolt_rounded,
                                           size: 18,
                                         ),
-                                        label: const Text('بیداری مأموریتی'),
+                                        label: Text(
+                                          context.tr("بیداری مأموریتی"),
+                                        ),
                                         selected: _isChallenge,
                                         onSelected: (_) => setState(
                                           () => _mode = AlarmMode.challenge,
@@ -326,8 +334,12 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
                                   const SizedBox(height: 14),
                                   Text(
                                     _isChallenge
-                                        ? 'برای خاموش‌کردن زنگ، مأموریت‌هایی که انتخاب می‌کنی انجام می‌شن.'
-                                        : 'با دکمهٔ توقف خاموش می‌شه؛ بدون مأموریت و بررسی بیداری. بلندی صدا هم دست خودته.',
+                                        ? context.tr(
+                                            "برای خاموش‌کردن زنگ، مأموریت‌هایی که انتخاب می‌کنی انجام می‌شن.",
+                                          )
+                                        : context.tr(
+                                            "با دکمهٔ توقف خاموش می‌شه؛ بدون مأموریت و بررسی بیداری. بلندی صدا هم دست خودته.",
+                                          ),
                                   ),
                                 ],
                               ),
@@ -338,20 +350,20 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
                                 bottom: footerSpace,
                               ),
                               maxLength: 40,
-                              decoration: const InputDecoration(
-                                labelText: 'نام زنگ',
-                                hintText: 'مثلاً یک شروع زودهنگام',
+                              decoration: InputDecoration(
+                                labelText: context.tr("نام زنگ"),
+                                hintText: context.tr("مثلاً یک شروع زودهنگام"),
                                 counterText: '',
                               ),
                             ),
                             const SizedBox(height: 16),
                             ClaySelectionTile<String>(
-                              label: 'گروه زنگ',
+                              label: context.tr("گروه زنگ"),
                               value: _groupId ?? '',
                               options: [
-                                const ClaySelectionOption(
+                                ClaySelectionOption(
                                   value: '',
-                                  label: 'بدون گروه',
+                                  label: context.tr("بدون گروه"),
                                   icon: Icons.alarm_rounded,
                                 ),
                                 for (final group in widget.groups)
@@ -367,7 +379,7 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
                             ),
                             const SizedBox(height: 22),
                             _section(
-                              'روزهای تکرار',
+                              context.tr("روزهای تکرار"),
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -378,14 +390,14 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
                                       for (final day in [6, 7, 1, 2, 3, 4, 5])
                                         FilterChip(
                                           label: Text(
-                                            const [
-                                              'دوشنبه',
-                                              'سه‌شنبه',
-                                              'چهارشنبه',
-                                              'پنجشنبه',
-                                              'جمعه',
-                                              'شنبه',
-                                              'یکشنبه',
+                                            [
+                                              context.tr("دوشنبه"),
+                                              context.tr("سه‌شنبه"),
+                                              context.tr("چهارشنبه"),
+                                              context.tr("پنجشنبه"),
+                                              context.tr("جمعه"),
+                                              context.tr("شنبه"),
+                                              context.tr("یکشنبه"),
                                             ][day - 1],
                                           ),
                                           selected: _days.contains(day),
@@ -406,19 +418,21 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
                                         onPressed: () => setState(
                                           () => _days = {1, 2, 3, 4, 5, 6, 7},
                                         ),
-                                        child: const Text('هر روز'),
+                                        child: Text(context.tr("هر روز")),
                                       ),
                                       TextButton(
                                         onPressed: () => setState(
                                           () => _days = {6, 7, 1, 2, 3},
                                         ),
-                                        child: const Text('شنبه تا چهارشنبه'),
+                                        child: Text(
+                                          context.tr("شنبه تا چهارشنبه"),
+                                        ),
                                       ),
                                     ],
                                   ),
                                   if (_days.isEmpty)
                                     Text(
-                                      'حداقل یک روز انتخاب کن.',
+                                      context.tr("حداقل یک روز انتخاب کن."),
                                       style: TextStyle(
                                         color: theme.colorScheme.error,
                                       ),
@@ -428,7 +442,7 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
                             ),
                             if (_isChallenge)
                               _section(
-                                'مأموریت بیدارشدن',
+                                context.tr("مأموریت بیدارشدن"),
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -442,7 +456,9 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
                                               missionIcon(type),
                                               size: 18,
                                             ),
-                                            label: Text(missionName(type)),
+                                            label: Text(
+                                              missionName(context, type),
+                                            ),
                                             selected: _challenges.contains(
                                               type,
                                             ),
@@ -460,7 +476,9 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
                                       Padding(
                                         padding: const EdgeInsets.only(top: 12),
                                         child: Text(
-                                          'برای خاموش‌کردن زنگ حداقل یک مأموریت انتخاب کن.',
+                                          context.tr(
+                                            "برای خاموش‌کردن زنگ حداقل یک مأموریت انتخاب کن.",
+                                          ),
                                           style: TextStyle(
                                             color: theme.colorScheme.error,
                                           ),
@@ -482,12 +500,17 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
                                           const SizedBox(width: 8),
                                           Expanded(
                                             child: Text(
-                                              missionName(_challenges[i]),
+                                              missionName(
+                                                context,
+                                                _challenges[i],
+                                              ),
                                               style: theme.textTheme.titleSmall,
                                             ),
                                           ),
                                           IconButton(
-                                            tooltip: 'مأموریت بالاتر',
+                                            tooltip: context.tr(
+                                              "مأموریت بالاتر",
+                                            ),
                                             onPressed: i == 0
                                                 ? null
                                                 : () => _moveMission(i, -1),
@@ -497,7 +520,9 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
                                             ),
                                           ),
                                           IconButton(
-                                            tooltip: 'مأموریت پایین‌تر',
+                                            tooltip: context.tr(
+                                              "مأموریت پایین‌تر",
+                                            ),
                                             onPressed:
                                                 i == _challenges.length - 1
                                                 ? null
@@ -513,15 +538,17 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
                                     ],
                                   ],
                                 ),
-                                subtitle: 'مأموریت‌ها به همین ترتیب اجرا می‌شن؛ ترتیب و سختی رو خودت انتخاب کن.',
+                                subtitle: context.tr(
+                                  "مأموریت‌ها به همین ترتیب اجرا می‌شن؛ ترتیب و سختی رو خودت انتخاب کن.",
+                                ),
                               ),
                             _section(
-                              'تعویق زنگ',
+                              context.tr("تعویق زنگ"),
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   ClaySelectionTile<int>(
-                                    label: 'مدت تعویق',
+                                    label: context.tr("مدت تعویق"),
                                     value: _snooze,
                                     options: [
                                       for (final minutes in ({
@@ -534,8 +561,10 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
                                         ClaySelectionOption(
                                           value: minutes,
                                           label: minutes == 0
-                                              ? 'بدون تعویق'
-                                              : '$minutes دقیقه',
+                                              ? context.tr("بدون تعویق")
+                                              : context.tr("{p0} دقیقه", {
+                                                  'p0': minutes,
+                                                }),
                                           icon: Icons.snooze_rounded,
                                         ),
                                     ],
@@ -544,7 +573,7 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
                                   ),
                                   if (_snooze > 0)
                                     NumberControl(
-                                      label: 'حداکثر دفعات تعویق',
+                                      label: context.tr("حداکثر دفعات تعویق"),
                                       value: _maxSnoozes,
                                       min: 0,
                                       max: 10,
@@ -554,7 +583,7 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
                                 ],
                               ),
                             ),
-                            const SectionHeading('صدای زنگ'),
+                            SectionHeading(context.tr("صدای زنگ")),
                             ClaySurface(
                               onTap: _pickingSound ? null : _pickSound,
                               padding: const EdgeInsets.all(18),
@@ -570,15 +599,17 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        const Text(
-                                          'انتخاب صدای زنگ',
-                                          style: TextStyle(
+                                        Text(
+                                          context.tr("انتخاب صدای زنگ"),
+                                          style: const TextStyle(
                                             fontWeight: FontWeight.w700,
                                           ),
                                         ),
                                         const SizedBox(height: 5),
                                         Text(
-                                          _soundName,
+                                          _soundUri == null
+                                              ? context.tr('صدای پیش‌فرض گوشی')
+                                              : _soundName,
                                           style: theme.textTheme.bodySmall,
                                         ),
                                       ],
@@ -597,11 +628,13 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
                             ),
                             const SizedBox(height: 16),
                             if (_isChallenge)
-                              const ClaySurface(
+                              ClaySurface(
                                 elevated: false,
                                 child: Text(
-                                  'بیداری مأموریتی با حداکثر صدای آلارم پخش می‌شه و بعد از پایان، بلندی صدای قبلی برمی‌گرده.',
-                                  style: TextStyle(height: 1.6),
+                                  context.tr(
+                                    "بیداری مأموریتی با حداکثر صدای آلارم پخش می‌شه و بعد از پایان، بلندی صدای قبلی برمی‌گرده.",
+                                  ),
+                                  style: const TextStyle(height: 1.6),
                                 ),
                               )
                             else
@@ -609,15 +642,19 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
                             const SizedBox(height: 22),
                             if (_isChallenge)
                               _section(
-                                'بررسی بیداری',
+                                context.tr("بررسی بیداری"),
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     SwitchListTile(
                                       contentPadding: EdgeInsets.zero,
-                                      title: const Text('مطمئن شو بیدار موندی'),
-                                      subtitle: const Text(
-                                        'اگر تأیید نکنی، زنگ دوباره شروع می‌شه.',
+                                      title: Text(
+                                        context.tr("مطمئن شو بیدار موندی"),
+                                      ),
+                                      subtitle: Text(
+                                        context.tr(
+                                          "اگر تأیید نکنی، زنگ دوباره شروع می‌شه.",
+                                        ),
                                       ),
                                       value: _wakeEnabled,
                                       onChanged: (value) =>
@@ -626,20 +663,22 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
                                     if (_wakeEnabled) ...[
                                       const SizedBox(height: 12),
                                       _dropdown(
-                                        'بررسی بعد از',
+                                        context.tr("بررسی بعد از"),
                                         _wakeDelay,
                                         {2, 3, 5, 10, _wakeDelay},
                                         (value) =>
                                             setState(() => _wakeDelay = value),
-                                        unit: 'دقیقه',
+                                        unit: context.tr("دقیقه"),
                                       ),
                                       const SizedBox(height: 14),
-                                      const Text(
-                                        'مهلت تأیید هر بررسی ۶۰ ثانیه است؛ اگر تأیید نکنی، زنگ دوباره شروع می‌شه.',
+                                      Text(
+                                        context.tr(
+                                          "مهلت تأیید هر بررسی ۶۰ ثانیه است؛ اگر تأیید نکنی، زنگ دوباره شروع می‌شه.",
+                                        ),
                                       ),
                                       const SizedBox(height: 8),
                                       NumberControl(
-                                        label: 'دفعات بررسی',
+                                        label: context.tr("دفعات بررسی"),
                                         value: _wakeCount,
                                         max: 5,
                                         onChanged: (value) =>
@@ -651,7 +690,7 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
                               ),
                             SwitchListTile(
                               contentPadding: EdgeInsets.zero,
-                              title: const Text('زنگ روشن باشه'),
+                              title: Text(context.tr("زنگ روشن باشه")),
                               value: _enabled,
                               onChanged: (value) =>
                                   setState(() => _enabled = value),
@@ -676,7 +715,9 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
                           : _save,
                       icon: const Icon(Icons.check_rounded),
                       label: Text(
-                        widget.alarm == null ? 'ذخیره زنگ' : 'ذخیره تغییرات',
+                        widget.alarm == null
+                            ? context.tr("ذخیره زنگ")
+                            : context.tr("ذخیره تغییرات"),
                       ),
                     ),
                   ),
@@ -690,26 +731,27 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
   }
 
   Widget _normalVolumeControls() => _section(
-    'بلندی صدای زنگ',
+    context.tr("بلندی صدای زنگ"),
     Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         ClaySelectionTile<String>(
-          label: 'کنترل بلندی صدا',
+          label: context.tr("کنترل بلندی صدا"),
           value: _volumeMode,
-          options: const [
+          options: [
             ClaySelectionOption(
               value: 'system',
-              label: 'صدای آلارم گوشی',
+              label: context.tr("صدای آلارم گوشی"),
               icon: Icons.volume_up_rounded,
-              description:
-                  'از بلندی صدای آلارم در تنظیمات گوشی استفاده می‌کنه.',
+              description: context.tr(
+                "از بلندی صدای آلارم در تنظیمات گوشی استفاده می‌کنه.",
+              ),
             ),
             ClaySelectionOption(
               value: 'custom',
-              label: 'صدای دلخواه این زنگ',
+              label: context.tr("صدای دلخواه این زنگ"),
               icon: Icons.tune_rounded,
-              description: 'بلندی صدای همین زنگ رو خودت انتخاب کن.',
+              description: context.tr("بلندی صدای همین زنگ رو خودت انتخاب کن."),
             ),
           ],
           onChanged: (value) => setState(() => _volumeMode = value),
@@ -717,7 +759,7 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
         if (_volumeMode == 'custom') ...[
           const SizedBox(height: 16),
           Text(
-            'بلندی صدا: $_volumePercent٪',
+            context.tr("بلندی صدا: {p0}٪", {'p0': _volumePercent}),
             style: Theme.of(context).textTheme.titleSmall,
           ),
           Slider(
@@ -725,14 +767,16 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
             min: 0,
             max: 100,
             divisions: 100,
-            label: '$_volumePercent٪',
+            label: context.tr("{p0}٪", {'p0': _volumePercent}),
             onChanged: (value) =>
                 setState(() => _volumePercent = value.round()),
           ),
           Text(
             _volumePercent == 0
-                ? '۰٪ یعنی این زنگ بدون صدای زنگ پخش می‌شه.'
-                : 'بعد از پایان زنگ، بلندی صدای قبلی گوشی برمی‌گرده.',
+                ? context.tr("۰٪ یعنی این زنگ بدون صدای زنگ پخش می‌شه.")
+                : context.tr(
+                    "بعد از پایان زنگ، بلندی صدای قبلی گوشی برمی‌گرده.",
+                  ),
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
@@ -768,11 +812,11 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
           spacing: 7,
           runSpacing: 7,
           children: [
-            for (final item in const {
-              'easy': 'آسان',
-              'medium': 'متوسط',
-              'hard': 'سخت',
-              'custom': 'دلخواه',
+            for (final item in {
+              'easy': context.tr("آسان"),
+              'medium': context.tr("متوسط"),
+              'hard': context.tr("سخت"),
+              'custom': context.tr("دلخواه"),
             }.entries)
               ChoiceChip(
                 label: Text(item.value),
@@ -792,7 +836,7 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
           ],
         ),
         NumberControl(
-          label: 'تعداد سؤال',
+          label: context.tr("تعداد سؤال"),
           value: _mission.mathQuestions,
           max: 20,
           onChanged: (v) =>
@@ -800,7 +844,7 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
         ),
         if (_mission.mathDifficulty == 'custom')
           NumberControl(
-            label: 'بزرگ‌ترین عدد',
+            label: context.tr("بزرگ‌ترین عدد"),
             value: _mission.mathMaxOperand,
             min: 5,
             max: 999,
@@ -809,17 +853,17 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
                 setState(() => _mission = _mission.copyWith(mathMaxOperand: v)),
           ),
         const SizedBox(height: 8),
-        const Text('عملیات'),
+        Text(context.tr("عملیات")),
         const SizedBox(height: 8),
         Wrap(
           spacing: 7,
           runSpacing: 7,
           children: [
-            for (final operation in const {
-              'add': 'جمع +',
-              'subtract': 'تفریق −',
-              'multiply': 'ضرب ×',
-              'divide': 'تقسیم ÷',
+            for (final operation in {
+              'add': context.tr("جمع +"),
+              'subtract': context.tr("تفریق −"),
+              'multiply': context.tr("ضرب ×"),
+              'divide': context.tr("تقسیم ÷"),
             }.entries)
               FilterChip(
                 label: Text(operation.value),
@@ -840,7 +884,7 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
     ChallengeType.memory => Column(
       children: [
         NumberControl(
-          label: 'اندازه شبکه',
+          label: context.tr("اندازه شبکه"),
           value: _mission.memoryGridSize,
           min: 3,
           max: 5,
@@ -853,14 +897,14 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
           ),
         ),
         NumberControl(
-          label: 'خانه‌های هدف',
+          label: context.tr("خانه‌های هدف"),
           value: _mission.memoryTargets,
           max: _mission.memoryGridSize * _mission.memoryGridSize - 1,
           onChanged: (v) =>
               setState(() => _mission = _mission.copyWith(memoryTargets: v)),
         ),
         NumberControl(
-          label: 'تعداد دور',
+          label: context.tr("تعداد دور"),
           value: _mission.memoryRounds,
           max: 10,
           onChanged: (v) =>
@@ -872,7 +916,7 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         NumberControl(
-          label: 'تعداد تکان',
+          label: context.tr("تعداد تکان"),
           value: _mission.shakeCount,
           min: 3,
           max: 100,
@@ -880,16 +924,16 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
               setState(() => _mission = _mission.copyWith(shakeCount: v)),
         ),
         const SizedBox(height: 10),
-        const Text('شدت تکان موردنیاز'),
+        Text(context.tr("شدت تکان موردنیاز")),
         const SizedBox(height: 8),
         Wrap(
           spacing: 7,
           runSpacing: 7,
           children: [
             for (final item in {
-              1.8: 'ملایم',
-              2.4: 'معمولی',
-              3.2: 'محکم',
+              1.8: context.tr("ملایم"),
+              2.4: context.tr("معمولی"),
+              3.2: context.tr("محکم"),
             }.entries)
               ChoiceChip(
                 label: Text(item.value),
@@ -901,9 +945,9 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
           ],
         ),
         const SizedBox(height: 10),
-        const Text(
-          'گوشی رو امن نگه دار؛ تکان کوتاه کافیه.',
-          style: TextStyle(fontSize: 12),
+        Text(
+          context.tr("گوشی رو امن نگه دار؛ تکان کوتاه کافیه."),
+          style: const TextStyle(fontSize: 12),
         ),
       ],
     ),
@@ -915,23 +959,26 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
         maxLength: 120,
         minLines: 1,
         maxLines: 3,
-        decoration: const InputDecoration(labelText: 'عبارتی که باید تایپ کنی'),
-        validator: (v) =>
-            v == null || v.trim().isEmpty ? 'یک عبارت وارد کن.' : null,
+        decoration: InputDecoration(
+          labelText: context.tr("عبارتی که باید تایپ کنی"),
+        ),
+        validator: (v) => v == null || v.trim().isEmpty
+            ? context.tr("یک عبارت وارد کن.")
+            : null,
       ),
     ),
     ChallengeType.order => Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         NumberControl(
-          label: 'تعداد اعداد',
+          label: context.tr("تعداد اعداد"),
           value: _mission.numberCount,
           min: 4,
           max: 12,
           onChanged: (v) =>
               setState(() => _mission = _mission.copyWith(numberCount: v)),
         ),
-        const Text('هنگام زنگ، اعداد رو از کوچک به بزرگ انتخاب می‌کنی.'),
+        Text(context.tr("هنگام زنگ، اعداد رو از کوچک به بزرگ انتخاب می‌کنی.")),
       ],
     ),
   };
