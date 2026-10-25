@@ -79,3 +79,9 @@
 - User clarified TWO LAUNCHER ICONS. Read-only targeted pm/query-activities attempted; phoneR... no longer connected, all queries returned device-not-found. No install/uninstall/launch/test or cleanup performed. Do not assert actual launcher/package duplication solved; source task fix and stable package identity are the available evidence.
 - SDK3.47.8 fully working; oldSDK backup retained. No runtime tests after stop. Remaining known gap: singleton active-alarm engine; OEM/task/volume/nav behavior ofpreview2 awaitsowner testing.
 - Last remaining administrative work: push final evidence docs, update public bilingual README/CHANGELOG/GPL and design images onmain only, open draft source review PR without merge/publicRelease.
+
+## Checkpoint9 — source and documentation backed up
+
+- Public main received documentation/license/images only in f10f82d; public app source remains v1.2.0. The preview application code is preserved separately on redesign/clay-v2, with main documentation merged back into that branch.
+- Final signed APKs remain local in dist/2.0.0-preview.2. No public Release, tag, additional test run or device installation was performed.
+- Duplicate launcher icons still require inspection of the owner's actual launcher/package state; device was disconnected during the authorized read-only query. Do not claim the task-affinity fix proves this separate report resolved.
