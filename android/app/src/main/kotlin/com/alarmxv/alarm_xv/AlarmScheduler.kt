@@ -78,6 +78,7 @@ object AlarmScheduler {
         alarm: AlarmData,
         triggerAt: Long,
     ): Boolean {
+        if (alarm.isNormal) return false
         if (canScheduleExact(context)) {
             setAlarmClock(context, alarm, triggerAt, wakeFailureKind, 0)
         } else {
@@ -101,6 +102,7 @@ object AlarmScheduler {
         alarm: AlarmData,
         triggerAt: Long,
     ): Boolean {
+        if (alarm.isNormal) return false
         val manager = context.getSystemService(AlarmManager::class.java)
         val operation = alarmPendingIntent(
             context,

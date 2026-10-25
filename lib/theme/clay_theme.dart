@@ -41,10 +41,29 @@ class ClayTokens extends ThemeExtension<ClayTokens> {
   static const Duration motion = Duration(milliseconds: 280);
   static ClayTokens of(BuildContext context) =>
       Theme.of(context).extension<ClayTokens>()!;
-  List<BoxShadow> get depth => [
-    BoxShadow(color: shadow, offset: const Offset(5, 7), blurRadius: 16),
-    BoxShadow(color: highlight, offset: const Offset(-3, -3), blurRadius: 10),
-  ];
+  bool get isDark => canvas.computeLuminance() < .1;
+  List<BoxShadow> get depth => isDark
+      ? [
+          BoxShadow(
+            color: shadow,
+            offset: const Offset(6, 8),
+            blurRadius: 15,
+            spreadRadius: 1,
+          ),
+          BoxShadow(
+            color: highlight,
+            offset: const Offset(-3, -3),
+            blurRadius: 8,
+          ),
+        ]
+      : [
+          BoxShadow(color: shadow, offset: const Offset(5, 7), blurRadius: 16),
+          BoxShadow(
+            color: highlight,
+            offset: const Offset(-3, -3),
+            blurRadius: 10,
+          ),
+        ];
   @override
   ClayTokens copyWith({
     Color? canvas,
@@ -86,12 +105,12 @@ ThemeData buildClayTheme(Brightness brightness, AccentPalette accent) {
     surface: dark ? const Color(0xFF232733) : const Color(0xFFF4F5FB),
   );
   final tokens = ClayTokens(
-    canvas: dark ? const Color(0xFF1B1F29) : const Color(0xFFECEDF5),
-    surface: dark ? const Color(0xFF272C39) : const Color(0xFFF5F6FC),
-    inset: dark ? const Color(0xFF1F2430) : const Color(0xFFE6E9F3),
-    border: dark ? const Color(0xFF3B4151) : const Color(0xFFFEFEFF),
-    highlight: dark ? const Color(0x243F4659) : const Color(0xC9FFFFFF),
-    shadow: dark ? const Color(0x660B0D14) : const Color(0x26A3ADC6),
+    canvas: dark ? const Color(0xFF1B202C) : const Color(0xFFECEDF5),
+    surface: dark ? const Color(0xFF30394A) : const Color(0xFFF5F6FC),
+    inset: dark ? const Color(0xFF222A38) : const Color(0xFFE6E9F3),
+    border: dark ? const Color(0xFF526078) : const Color(0xFFFEFEFF),
+    highlight: dark ? const Color(0x467384A2) : const Color(0xC9FFFFFF),
+    shadow: dark ? const Color(0xA30A101B) : const Color(0x26A3ADC6),
     success: dark ? const Color(0xFF8CD9B4) : const Color(0xFF246B4E),
   );
   final rounded = RoundedRectangleBorder(
@@ -129,6 +148,41 @@ ThemeData buildClayTheme(Brightness brightness, AccentPalette accent) {
       backgroundColor: tokens.surface,
       surfaceTintColor: Colors.transparent,
       shape: rounded,
+    ),
+    timePickerTheme: TimePickerThemeData(
+      backgroundColor: tokens.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+    ),
+    popupMenuTheme: PopupMenuThemeData(
+      color: tokens.surface,
+      surfaceTintColor: Colors.transparent,
+      shadowColor: tokens.shadow,
+      elevation: 12,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(22),
+        side: BorderSide(color: tokens.border.withValues(alpha: .7)),
+      ),
+    ),
+    menuTheme: MenuThemeData(
+      style: MenuStyle(
+        backgroundColor: WidgetStatePropertyAll(tokens.surface),
+        surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+        shadowColor: WidgetStatePropertyAll(tokens.shadow),
+        elevation: const WidgetStatePropertyAll(12),
+        shape: WidgetStatePropertyAll(
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        ),
+      ),
+    ),
+    dropdownMenuTheme: DropdownMenuThemeData(
+      menuStyle: MenuStyle(
+        backgroundColor: WidgetStatePropertyAll(tokens.surface),
+        surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+        elevation: const WidgetStatePropertyAll(12),
+        shape: WidgetStatePropertyAll(
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        ),
+      ),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,

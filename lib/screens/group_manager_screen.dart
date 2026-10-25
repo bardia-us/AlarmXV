@@ -121,8 +121,10 @@ class _GroupManagerScreenState extends State<GroupManagerScreen> {
       final groups = widget.controller.settings.groups;
       final busy = _busy || widget.controller.isSaving;
       return Scaffold(
+        extendBody: true,
         appBar: AppBar(title: const Text('گروه‌های زنگ')),
         body: SafeArea(
+          bottom: false,
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 760),
@@ -138,7 +140,7 @@ class _GroupManagerScreenState extends State<GroupManagerScreen> {
                   Expanded(
                     child: groups.isEmpty
                         ? Center(
-                            child: Padding(
+                            child: SingleChildScrollView(
                               padding: const EdgeInsets.all(32),
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
@@ -162,7 +164,14 @@ class _GroupManagerScreenState extends State<GroupManagerScreen> {
                             ),
                           )
                         : ReorderableListView.builder(
-                            padding: const EdgeInsets.fromLTRB(22, 4, 22, 24),
+                            padding: EdgeInsets.fromLTRB(
+                              22,
+                              4,
+                              22,
+                              124 +
+                                  MediaQuery.paddingOf(context).bottom +
+                                  MediaQuery.textScalerOf(context).scale(24),
+                            ),
                             buildDefaultDragHandles: false,
                             onReorderItem: _reorder,
                             itemCount: groups.length,
@@ -203,6 +212,7 @@ class _GroupManagerScreenState extends State<GroupManagerScreen> {
                                             ),
                                           ),
                                           PopupMenuButton<String>(
+                                            clipBehavior: Clip.antiAlias,
                                             enabled: !busy,
                                             tooltip:
                                                 'گزینه‌های گروه ' + group.name,
@@ -261,10 +271,8 @@ class _GroupManagerScreenState extends State<GroupManagerScreen> {
             ),
           ),
         ),
-        bottomNavigationBar: SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(22, 8, 22, 16),
+        bottomNavigationBar: ClayActionFooter(
+          child: ClayPress(
             child: FilledButton.icon(
               onPressed: busy ? null : _edit,
               icon: const Icon(Icons.create_new_folder_outlined),

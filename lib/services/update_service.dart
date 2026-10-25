@@ -155,7 +155,7 @@ class UpdateService {
   Future<InstalledAppInfo> appInfo() async {
     final info = await _channel.invokeMapMethod<String, dynamic>('getAppInfo');
     return InstalledAppInfo(
-      versionName: info?['versionName'] as String? ?? '2.0.0-preview.1',
+      versionName: info?['versionName'] as String? ?? '2.0.0-preview.2',
       supportedAbis: (info?['supportedAbis'] as List<dynamic>? ?? [])
           .cast<String>(),
       lastSeenVersion: info?['lastSeenVersion'] as String? ?? '',

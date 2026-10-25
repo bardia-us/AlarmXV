@@ -48,6 +48,14 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
   late Set<int> _days;
   late List<ChallengeType> _challenges;
   late MissionSettings _mission;
+  late AlarmMode _mode;
+  late String _volumeMode;
+  late int _volumePercent;
+  bool get _isChallenge => _mode == AlarmMode.challenge;
+  double get _footerSpace =>
+      124 +
+      MediaQuery.paddingOf(context).bottom +
+      MediaQuery.textScalerOf(context).scale(24);
   late bool _enabled, _protectVolume, _wakeEnabled;
   late int _snooze, _maxSnoozes, _wakeDelay, _wakeTimeout, _wakeCount;
   String? _groupId, _soundUri;
@@ -57,6 +65,9 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
   void initState() {
     super.initState();
     final a = widget.alarm;
+    _mode = a?.mode ?? AlarmMode.challenge;
+    _volumeMode = a?.volumeMode ?? 'system';
+    _volumePercent = a?.volumePercent ?? 70;
     _label = TextEditingController(text: a?.label ?? '');
     _mission = a?.missionSettings ?? const MissionSettings();
     _phrase = TextEditingController(text: _mission.typingPhrase);
@@ -123,7 +134,9 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
   }
 
   void _save() {
-    if (!_form.currentState!.validate() || _days.isEmpty || _challenges.isEmpty)
+    if (!_form.currentState!.validate() ||
+        _days.isEmpty ||
+        (_isChallenge && _challenges.isEmpty))
       return;
     Navigator.pop(
       context,
@@ -136,6 +149,9 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
         minute: _time.minute,
         weekdays: Set.unmodifiable(_days),
         isEnabled: _enabled,
+        mode: _mode,
+        volumeMode: _volumeMode,
+        volumePercent: _volumePercent,
         challenges: Set.unmodifiable(_challenges),
         groupId: _groupId,
         missionSettings: _mission.copyWith(typingPhrase: _phrase.text.trim()),
@@ -171,424 +187,491 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final footerSpace = _footerSpace;
     return SizedBox(
       height: MediaQuery.sizeOf(context).height * .95,
       child: SafeArea(
         top: false,
+        bottom: false,
         child: Padding(
           padding: EdgeInsets.only(
             bottom: MediaQuery.viewInsetsOf(context).bottom,
           ),
-          child: Column(
+          child: Stack(
+            fit: StackFit.expand,
             children: [
-              const SizedBox(height: 10),
-              Container(
-                width: 38,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.outlineVariant,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              Expanded(
-                child: Form(
-                  key: _form,
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(22, 8, 22, 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 18),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  widget.alarm == null
-                                      ? 'یک بیداری تازه'
-                                      : 'ویرایش زنگ',
-                                  style: theme.textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                              ),
-                              IconButton(
-                                tooltip: 'بستن ویرایشگر',
-                                onPressed: () => Navigator.pop(context),
-                                icon: const Icon(Icons.close_rounded),
-                              ),
-                            ],
-                          ),
-                        ),
-                        ClayPress(
-                          child: ClaySurface(
-                            onTap: _pickTime,
-                            color: Color.alphaBlend(
-                              theme.colorScheme.primary.withValues(alpha: .08),
-                              ClayTokens.of(context).surface,
-                            ),
-                            child: Column(
-                              children: [
-                                Text(
-                                  'زمان بیداری',
-                                  style: theme.textTheme.labelLarge,
-                                ),
-                                const SizedBox(height: 8),
-                                Directionality(
-                                  textDirection: TextDirection.ltr,
-                                  child: FittedBox(
-                                    fit: BoxFit.scaleDown,
-                                    child: Text(
-                                      _time.hour.toString().padLeft(2, '0') +
-                                          ':' +
-                                          _time.minute.toString().padLeft(
-                                            2,
-                                            '0',
-                                          ),
-                                      style: theme.textTheme.displayLarge
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w900,
-                                            letterSpacing: -2,
-                                            color: theme.colorScheme.primary,
-                                          ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                const Text('برای تغییر ساعت بزن'),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 22),
-                        TextFormField(
-                          controller: _label,
-                          maxLength: 40,
-                          decoration: const InputDecoration(
-                            labelText: 'نام زنگ',
-                            hintText: 'مثلاً یک شروع زودهنگام',
-                            counterText: '',
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        DropdownButtonFormField<String>(
-                          initialValue: _groupId ?? '',
-                          isExpanded: true,
-                          decoration: const InputDecoration(
-                            labelText: 'گروه زنگ',
-                          ),
-                          items: [
-                            const DropdownMenuItem(
-                              value: '',
-                              child: Text('بدون گروه'),
-                            ),
-                            ...widget.groups.map(
-                              (g) => DropdownMenuItem(
-                                value: g.id,
-                                child: Row(
-                                  children: [
-                                    Icon(groupIcon(g.icon), size: 18),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        g.name,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                          onChanged: (v) =>
-                              setState(() => _groupId = v == '' ? null : v),
-                        ),
-                        const SizedBox(height: 22),
-                        _section(
-                          'روزهای تکرار',
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Wrap(
-                                spacing: 7,
-                                runSpacing: 7,
-                                children: [
-                                  for (final day in [6, 7, 1, 2, 3, 4, 5])
-                                    FilterChip(
-                                      label: Text(
-                                        const [
-                                          'دوشنبه',
-                                          'سه‌شنبه',
-                                          'چهارشنبه',
-                                          'پنجشنبه',
-                                          'جمعه',
-                                          'شنبه',
-                                          'یکشنبه',
-                                        ][day - 1],
-                                      ),
-                                      selected: _days.contains(day),
-                                      onSelected: (v) => setState(() {
-                                        v ? _days.add(day) : _days.remove(day);
-                                      }),
-                                    ),
-                                ],
-                              ),
-                              const SizedBox(height: 10),
-                              Wrap(
-                                spacing: 8,
-                                children: [
-                                  TextButton(
-                                    onPressed: () => setState(
-                                      () => _days = {1, 2, 3, 4, 5, 6, 7},
-                                    ),
-                                    child: const Text('هر روز'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () =>
-                                        setState(() => _days = {6, 7, 1, 2, 3}),
-                                    child: const Text('شنبه تا چهارشنبه'),
-                                  ),
-                                ],
-                              ),
-                              if (_days.isEmpty)
-                                Text(
-                                  'حداقل یک روز انتخاب کن.',
-                                  style: TextStyle(
-                                    color: theme.colorScheme.error,
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                        _section(
-                          'مأموریت بیدارشدن',
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Wrap(
-                                spacing: 7,
-                                runSpacing: 7,
-                                children: [
-                                  for (final type in ChallengeType.values)
-                                    FilterChip(
-                                      avatar: Icon(missionIcon(type), size: 18),
-                                      label: Text(missionName(type)),
-                                      selected: _challenges.contains(type),
-                                      onSelected: (v) => setState(() {
-                                        v
-                                            ? _challenges.add(type)
-                                            : _challenges.remove(type);
-                                      }),
-                                    ),
-                                ],
-                              ),
-                              if (_challenges.isEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 12),
-                                  child: Text(
-                                    'برای خاموش‌کردن زنگ حداقل یک مأموریت انتخاب کن.',
-                                    style: TextStyle(
-                                      color: theme.colorScheme.error,
-                                    ),
-                                  ),
-                                ),
-                              for (var i = 0; i < _challenges.length; i++) ...[
-                                const SizedBox(height: 14),
-                                Divider(
-                                  color: theme.colorScheme.outlineVariant
-                                      .withValues(alpha: .6),
-                                ),
-                                Row(
-                                  children: [
-                                    StatusPill((i + 1).toString()),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        missionName(_challenges[i]),
-                                        style: theme.textTheme.titleSmall,
-                                      ),
-                                    ),
-                                    IconButton(
-                                      tooltip: 'مأموریت بالاتر',
-                                      onPressed: i == 0
-                                          ? null
-                                          : () => _moveMission(i, -1),
-                                      icon: const Icon(
-                                        Icons.arrow_upward_rounded,
-                                        size: 18,
-                                      ),
-                                    ),
-                                    IconButton(
-                                      tooltip: 'مأموریت پایین‌تر',
-                                      onPressed: i == _challenges.length - 1
-                                          ? null
-                                          : () => _moveMission(i, 1),
-                                      icon: const Icon(
-                                        Icons.arrow_downward_rounded,
-                                        size: 18,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                _missionControls(_challenges[i]),
-                              ],
-                            ],
-                          ),
-                          subtitle: 'مأموریت‌ها به همین ترتیب اجرا می‌شن؛ ترتیب و سختی رو خودت انتخاب کن.',
-                        ),
-                        _section(
-                          'تعویق زنگ',
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
-                                children: [
-                                  for (final minutes in ({
-                                    0,
-                                    5,
-                                    10,
-                                    15,
-                                    _snooze,
-                                  }.toList()..sort()))
-                                    ChoiceChip(
-                                      label: Text(
-                                        minutes == 0
-                                            ? 'خاموش'
-                                            : '$minutes دقیقه',
-                                      ),
-                                      selected: _snooze == minutes,
-                                      onSelected: (_) =>
-                                          setState(() => _snooze = minutes),
-                                    ),
-                                ],
-                              ),
-                              if (_snooze > 0)
-                                NumberControl(
-                                  label: 'حداکثر دفعات تعویق',
-                                  value: _maxSnoozes,
-                                  min: 0,
-                                  max: 10,
-                                  onChanged: (v) =>
-                                      setState(() => _maxSnoozes = v),
-                                ),
-                            ],
-                          ),
-                        ),
-                        const SectionHeading('صدای بیداری'),
-                        ClaySurface(
-                          onTap: _pickingSound ? null : _pickSound,
-                          padding: const EdgeInsets.all(18),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.music_note_rounded,
-                                color: theme.colorScheme.primary,
-                              ),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      'انتخاب صدای زنگ',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 5),
-                                    Text(
-                                      _soundName,
-                                      style: theme.textTheme.bodySmall,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              _pickingSound
-                                  ? const SizedBox.square(
-                                      dimension: 22,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : const Icon(Icons.chevron_left_rounded),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        const ClaySurface(
-                          elevated: false,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'زنگ با حداکثر صدای آلارم پخش می‌شه و بعد از پایان، بلندی صدای قبلی برمی‌گرده.',
-                                style: TextStyle(height: 1.6),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 22),
-                        _section(
-                          'بررسی بیداری',
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SwitchListTile(
-                                contentPadding: EdgeInsets.zero,
-                                title: const Text('مطمئن شو بیدار موندی'),
-                                subtitle: const Text(
-                                  'اگر تأیید نکنی، زنگ دوباره شروع می‌شه.',
-                                ),
-                                value: _wakeEnabled,
-                                onChanged: (v) =>
-                                    setState(() => _wakeEnabled = v),
-                              ),
-                              if (_wakeEnabled) ...[
-                                const SizedBox(height: 12),
-                                _dropdown(
-                                  'بررسی بعد از',
-                                  _wakeDelay,
-                                  {2, 3, 5, 10, _wakeDelay},
-                                  (v) => setState(() => _wakeDelay = v),
-                                  unit: 'دقیقه',
-                                ),
-                                const SizedBox(height: 14),
-                                const Text(
-                                  'مهلت تأیید هر بررسی ۶۰ ثانیه است؛ اگر تأیید نکنی، زنگ دوباره شروع می‌شه.',
-                                ),
-                                const SizedBox(height: 8),
-                                NumberControl(
-                                  label: 'دفعات بررسی',
-                                  value: _wakeCount,
-                                  max: 5,
-                                  onChanged: (v) =>
-                                      setState(() => _wakeCount = v),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                        SwitchListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: const Text('زنگ روشن باشه'),
-                          value: _enabled,
-                          onChanged: (v) => setState(() => _enabled = v),
-                        ),
-                      ],
+              Column(
+                children: [
+                  const SizedBox(height: 10),
+                  Container(
+                    width: 38,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.outlineVariant,
+                      borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                ),
+                  Expanded(
+                    child: Form(
+                      key: _form,
+                      child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        padding: EdgeInsets.fromLTRB(22, 8, 22, footerSpace),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 18),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      widget.alarm == null
+                                          ? 'یک بیداری تازه'
+                                          : 'ویرایش زنگ',
+                                      style: theme.textTheme.titleLarge
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w800,
+                                          ),
+                                    ),
+                                  ),
+                                  IconButton(
+                                    tooltip: 'بستن ویرایشگر',
+                                    onPressed: () => Navigator.pop(context),
+                                    icon: const Icon(Icons.close_rounded),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            ClayPress(
+                              child: ClaySurface(
+                                onTap: _pickTime,
+                                color: Color.alphaBlend(
+                                  theme.colorScheme.primary.withValues(
+                                    alpha: .08,
+                                  ),
+                                  ClayTokens.of(context).surface,
+                                ),
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      'زمان زنگ',
+                                      style: theme.textTheme.labelLarge,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Directionality(
+                                      textDirection: TextDirection.ltr,
+                                      child: FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(
+                                          _time.hour.toString().padLeft(
+                                                2,
+                                                '0',
+                                              ) +
+                                              ':' +
+                                              _time.minute.toString().padLeft(
+                                                2,
+                                                '0',
+                                              ),
+                                          style: theme.textTheme.displayLarge
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w900,
+                                                letterSpacing: -2,
+                                                color:
+                                                    theme.colorScheme.primary,
+                                              ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    const Text('برای تغییر ساعت بزن'),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 22),
+                            _section(
+                              'نوع زنگ',
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: [
+                                      ChoiceChip(
+                                        avatar: const Icon(
+                                          Icons.alarm_rounded,
+                                          size: 18,
+                                        ),
+                                        label: const Text('زنگ عادی'),
+                                        selected: !_isChallenge,
+                                        onSelected: (_) => setState(
+                                          () => _mode = AlarmMode.normal,
+                                        ),
+                                      ),
+                                      ChoiceChip(
+                                        avatar: const Icon(
+                                          Icons.bolt_rounded,
+                                          size: 18,
+                                        ),
+                                        label: const Text('بیداری مأموریتی'),
+                                        selected: _isChallenge,
+                                        onSelected: (_) => setState(
+                                          () => _mode = AlarmMode.challenge,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 14),
+                                  Text(
+                                    _isChallenge
+                                        ? 'برای خاموش‌کردن زنگ، مأموریت‌هایی که انتخاب می‌کنی انجام می‌شن.'
+                                        : 'با دکمهٔ توقف خاموش می‌شه؛ بدون مأموریت و بررسی بیداری. بلندی صدا هم دست خودته.',
+                                  ),
+                                ],
+                              ),
+                            ),
+                            TextFormField(
+                              controller: _label,
+                              scrollPadding: EdgeInsets.only(
+                                bottom: footerSpace,
+                              ),
+                              maxLength: 40,
+                              decoration: const InputDecoration(
+                                labelText: 'نام زنگ',
+                                hintText: 'مثلاً یک شروع زودهنگام',
+                                counterText: '',
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            ClaySelectionTile<String>(
+                              label: 'گروه زنگ',
+                              value: _groupId ?? '',
+                              options: [
+                                const ClaySelectionOption(
+                                  value: '',
+                                  label: 'بدون گروه',
+                                  icon: Icons.alarm_rounded,
+                                ),
+                                for (final group in widget.groups)
+                                  ClaySelectionOption(
+                                    value: group.id,
+                                    label: group.name,
+                                    icon: groupIcon(group.icon),
+                                  ),
+                              ],
+                              onChanged: (value) => setState(
+                                () => _groupId = value.isEmpty ? null : value,
+                              ),
+                            ),
+                            const SizedBox(height: 22),
+                            _section(
+                              'روزهای تکرار',
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Wrap(
+                                    spacing: 7,
+                                    runSpacing: 7,
+                                    children: [
+                                      for (final day in [6, 7, 1, 2, 3, 4, 5])
+                                        FilterChip(
+                                          label: Text(
+                                            const [
+                                              'دوشنبه',
+                                              'سه‌شنبه',
+                                              'چهارشنبه',
+                                              'پنجشنبه',
+                                              'جمعه',
+                                              'شنبه',
+                                              'یکشنبه',
+                                            ][day - 1],
+                                          ),
+                                          selected: _days.contains(day),
+                                          onSelected: (selected) =>
+                                              setState(() {
+                                                selected
+                                                    ? _days.add(day)
+                                                    : _days.remove(day);
+                                              }),
+                                        ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Wrap(
+                                    spacing: 8,
+                                    children: [
+                                      TextButton(
+                                        onPressed: () => setState(
+                                          () => _days = {1, 2, 3, 4, 5, 6, 7},
+                                        ),
+                                        child: const Text('هر روز'),
+                                      ),
+                                      TextButton(
+                                        onPressed: () => setState(
+                                          () => _days = {6, 7, 1, 2, 3},
+                                        ),
+                                        child: const Text('شنبه تا چهارشنبه'),
+                                      ),
+                                    ],
+                                  ),
+                                  if (_days.isEmpty)
+                                    Text(
+                                      'حداقل یک روز انتخاب کن.',
+                                      style: TextStyle(
+                                        color: theme.colorScheme.error,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                            if (_isChallenge)
+                              _section(
+                                'مأموریت بیدارشدن',
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Wrap(
+                                      spacing: 7,
+                                      runSpacing: 7,
+                                      children: [
+                                        for (final type in ChallengeType.values)
+                                          FilterChip(
+                                            avatar: Icon(
+                                              missionIcon(type),
+                                              size: 18,
+                                            ),
+                                            label: Text(missionName(type)),
+                                            selected: _challenges.contains(
+                                              type,
+                                            ),
+                                            onSelected: (selected) => setState(
+                                              () {
+                                                selected
+                                                    ? _challenges.add(type)
+                                                    : _challenges.remove(type);
+                                              },
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                    if (_challenges.isEmpty)
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 12),
+                                        child: Text(
+                                          'برای خاموش‌کردن زنگ حداقل یک مأموریت انتخاب کن.',
+                                          style: TextStyle(
+                                            color: theme.colorScheme.error,
+                                          ),
+                                        ),
+                                      ),
+                                    for (
+                                      var i = 0;
+                                      i < _challenges.length;
+                                      i++
+                                    ) ...[
+                                      const SizedBox(height: 14),
+                                      Divider(
+                                        color: theme.colorScheme.outlineVariant
+                                            .withValues(alpha: .6),
+                                      ),
+                                      Row(
+                                        children: [
+                                          StatusPill((i + 1).toString()),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              missionName(_challenges[i]),
+                                              style: theme.textTheme.titleSmall,
+                                            ),
+                                          ),
+                                          IconButton(
+                                            tooltip: 'مأموریت بالاتر',
+                                            onPressed: i == 0
+                                                ? null
+                                                : () => _moveMission(i, -1),
+                                            icon: const Icon(
+                                              Icons.arrow_upward_rounded,
+                                              size: 18,
+                                            ),
+                                          ),
+                                          IconButton(
+                                            tooltip: 'مأموریت پایین‌تر',
+                                            onPressed:
+                                                i == _challenges.length - 1
+                                                ? null
+                                                : () => _moveMission(i, 1),
+                                            icon: const Icon(
+                                              Icons.arrow_downward_rounded,
+                                              size: 18,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      _missionControls(_challenges[i]),
+                                    ],
+                                  ],
+                                ),
+                                subtitle: 'مأموریت‌ها به همین ترتیب اجرا می‌شن؛ ترتیب و سختی رو خودت انتخاب کن.',
+                              ),
+                            _section(
+                              'تعویق زنگ',
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  ClaySelectionTile<int>(
+                                    label: 'مدت تعویق',
+                                    value: _snooze,
+                                    options: [
+                                      for (final minutes in ({
+                                        0,
+                                        5,
+                                        10,
+                                        15,
+                                        _snooze,
+                                      }.toList()..sort()))
+                                        ClaySelectionOption(
+                                          value: minutes,
+                                          label: minutes == 0
+                                              ? 'بدون تعویق'
+                                              : '$minutes دقیقه',
+                                          icon: Icons.snooze_rounded,
+                                        ),
+                                    ],
+                                    onChanged: (value) =>
+                                        setState(() => _snooze = value),
+                                  ),
+                                  if (_snooze > 0)
+                                    NumberControl(
+                                      label: 'حداکثر دفعات تعویق',
+                                      value: _maxSnoozes,
+                                      min: 0,
+                                      max: 10,
+                                      onChanged: (value) =>
+                                          setState(() => _maxSnoozes = value),
+                                    ),
+                                ],
+                              ),
+                            ),
+                            const SectionHeading('صدای زنگ'),
+                            ClaySurface(
+                              onTap: _pickingSound ? null : _pickSound,
+                              padding: const EdgeInsets.all(18),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.music_note_rounded,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          'انتخاب صدای زنگ',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 5),
+                                        Text(
+                                          _soundName,
+                                          style: theme.textTheme.bodySmall,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  _pickingSound
+                                      ? const SizedBox.square(
+                                          dimension: 22,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                      : const Icon(Icons.chevron_left_rounded),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            if (_isChallenge)
+                              const ClaySurface(
+                                elevated: false,
+                                child: Text(
+                                  'بیداری مأموریتی با حداکثر صدای آلارم پخش می‌شه و بعد از پایان، بلندی صدای قبلی برمی‌گرده.',
+                                  style: TextStyle(height: 1.6),
+                                ),
+                              )
+                            else
+                              _normalVolumeControls(),
+                            const SizedBox(height: 22),
+                            if (_isChallenge)
+                              _section(
+                                'بررسی بیداری',
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    SwitchListTile(
+                                      contentPadding: EdgeInsets.zero,
+                                      title: const Text('مطمئن شو بیدار موندی'),
+                                      subtitle: const Text(
+                                        'اگر تأیید نکنی، زنگ دوباره شروع می‌شه.',
+                                      ),
+                                      value: _wakeEnabled,
+                                      onChanged: (value) =>
+                                          setState(() => _wakeEnabled = value),
+                                    ),
+                                    if (_wakeEnabled) ...[
+                                      const SizedBox(height: 12),
+                                      _dropdown(
+                                        'بررسی بعد از',
+                                        _wakeDelay,
+                                        {2, 3, 5, 10, _wakeDelay},
+                                        (value) =>
+                                            setState(() => _wakeDelay = value),
+                                        unit: 'دقیقه',
+                                      ),
+                                      const SizedBox(height: 14),
+                                      const Text(
+                                        'مهلت تأیید هر بررسی ۶۰ ثانیه است؛ اگر تأیید نکنی، زنگ دوباره شروع می‌شه.',
+                                      ),
+                                      const SizedBox(height: 8),
+                                      NumberControl(
+                                        label: 'دفعات بررسی',
+                                        value: _wakeCount,
+                                        max: 5,
+                                        onChanged: (value) =>
+                                            setState(() => _wakeCount = value),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            SwitchListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: const Text('زنگ روشن باشه'),
+                              value: _enabled,
+                              onChanged: (value) =>
+                                  setState(() => _enabled = value),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(22, 10, 22, 14),
-                child: SizedBox(
-                  width: double.infinity,
+              PositionedDirectional(
+                start: 0,
+                end: 0,
+                bottom: 0,
+                child: ClayActionFooter(
                   child: ClayPress(
                     child: FilledButton.icon(
-                      onPressed: _days.isEmpty || _challenges.isEmpty
+                      onPressed:
+                          _days.isEmpty || (_isChallenge && _challenges.isEmpty)
                           ? null
                           : _save,
                       icon: const Icon(Icons.check_rounded),
@@ -606,22 +689,75 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
     );
   }
 
+  Widget _normalVolumeControls() => _section(
+    'بلندی صدای زنگ',
+    Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ClaySelectionTile<String>(
+          label: 'کنترل بلندی صدا',
+          value: _volumeMode,
+          options: const [
+            ClaySelectionOption(
+              value: 'system',
+              label: 'صدای آلارم گوشی',
+              icon: Icons.volume_up_rounded,
+              description:
+                  'از بلندی صدای آلارم در تنظیمات گوشی استفاده می‌کنه.',
+            ),
+            ClaySelectionOption(
+              value: 'custom',
+              label: 'صدای دلخواه این زنگ',
+              icon: Icons.tune_rounded,
+              description: 'بلندی صدای همین زنگ رو خودت انتخاب کن.',
+            ),
+          ],
+          onChanged: (value) => setState(() => _volumeMode = value),
+        ),
+        if (_volumeMode == 'custom') ...[
+          const SizedBox(height: 16),
+          Text(
+            'بلندی صدا: $_volumePercent٪',
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
+          Slider(
+            value: _volumePercent.toDouble(),
+            min: 0,
+            max: 100,
+            divisions: 100,
+            label: '$_volumePercent٪',
+            onChanged: (value) =>
+                setState(() => _volumePercent = value.round()),
+          ),
+          Text(
+            _volumePercent == 0
+                ? '۰٪ یعنی این زنگ بدون صدای زنگ پخش می‌شه.'
+                : 'بعد از پایان زنگ، بلندی صدای قبلی گوشی برمی‌گرده.',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      ],
+    ),
+  );
+
   Widget _dropdown(
     String label,
     int value,
     Set<int> values,
     ValueChanged<int> onChanged, {
     String unit = '',
-  }) => DropdownButtonFormField<int>(
-    initialValue: value,
-    isExpanded: true,
-    decoration: InputDecoration(labelText: label),
-    items: (values.toList()..sort())
-        .map((v) => DropdownMenuItem(value: v, child: Text('$v $unit')))
-        .toList(),
-    onChanged: (v) {
-      if (v != null) onChanged(v);
-    },
+  }) => ClaySelectionTile<int>(
+    label: label,
+    value: value,
+    options: [
+      for (final item in (values.toList()..sort()))
+        ClaySelectionOption(
+          value: item,
+          label: '$item $unit',
+          icon: Icons.schedule_rounded,
+        ),
+    ],
+    onChanged: onChanged,
   );
   Widget _missionControls(ChallengeType type) => switch (type) {
     ChallengeType.math => Column(
@@ -775,6 +911,7 @@ class _AlarmEditorSheetState extends State<AlarmEditorSheet> {
       padding: const EdgeInsets.only(top: 12),
       child: TextFormField(
         controller: _phrase,
+        scrollPadding: EdgeInsets.only(bottom: _footerSpace),
         maxLength: 120,
         minLines: 1,
         maxLines: 3,

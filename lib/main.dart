@@ -8,8 +8,9 @@ import 'services/frame_recorder.dart';
 import 'theme/clay_theme.dart';
 import 'theme/settings_controller.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   LicenseRegistry.addLicense(() async* {
     yield LicenseEntryWithLineBreaks([
       'AlarmXV',
@@ -51,15 +52,38 @@ class _AlarmXvAppState extends State<AlarmXvApp> {
       themeMode: _settings.settings.themeMode,
       themeAnimationDuration:
           WidgetsBinding
-              .instance
-              .platformDispatcher
-              .accessibilityFeatures
-              .disableAnimations
+                  .instance
+                  .platformDispatcher
+                  .accessibilityFeatures
+                  .disableAnimations ||
+              WidgetsBinding
+                  .instance
+                  .platformDispatcher
+                  .accessibilityFeatures
+                  .accessibleNavigation
           ? Duration.zero
           : ClayTokens.motion,
       themeAnimationCurve: Curves.easeOutCubic,
-      builder: (context, child) =>
-          Directionality(textDirection: TextDirection.rtl, child: child!),
+      builder: (context, child) {
+        final dark = Theme.of(context).brightness == Brightness.dark;
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          value: SystemUiOverlayStyle(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness: dark ? Brightness.light : Brightness.dark,
+            systemNavigationBarColor: Colors.transparent,
+            systemNavigationBarDividerColor: Colors.transparent,
+            systemNavigationBarIconBrightness: dark
+                ? Brightness.light
+                : Brightness.dark,
+            systemNavigationBarContrastEnforced: false,
+            systemStatusBarContrastEnforced: false,
+          ),
+          child: Directionality(
+            textDirection: TextDirection.rtl,
+            child: child!,
+          ),
+        );
+      },
       home: _settings.isLoaded
           ? HomeScreen(storage: widget.storage, settings: _settings)
           : Scaffold(

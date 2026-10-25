@@ -11,12 +11,12 @@ Tech stack: existing Flutter/Dart, Kotlin Android Views, existing MethodChannel 
 ## Constraints and decisions
 - Existing application ID, signing and alarms stay intact; defaults migrate v1.2.0 without discarding records.
 - User explicitly requested autonomous execution after planning; no extra design approval gate.
-- Work on branch redesign/clay-v2 in the existing relocated project Desktop/ph/AlarmXV; no public push/release.
+- Work on branch redesign/clay-v2 in the existing relocated project Desktop/ph/AlarmXV. User later requested public bilingual homepage/docs; source backup on a review branch is allowed. No public GitHub Release or merge of preview code without approval.
 - Native mission settings: math difficulty/operations/questions; memory grid/targets/rounds; shake count/sensitivity; typing phrase and number-order mission. Fixed ordered mission pipeline with existing Set insertion preserved.
 - Groups stored separately; alarms keep groupId. Deleting a group unassigns its alarms, never deletes them. Group toggles change member enabled states only after confirmation.
 - Persistent appearance: system/light/dark and 8 accents. Native activity reads the same appearance preferences.
 - No QR/photo in this preview: camera registration and fallback require separate device validation.
-- No physical ADB device present at audit. Do not claim real-device tests or 120 FPS without measurement.
+- No physical ADB device present at audit; user later connected Galaxy A34 Android16/120Hz. Do not claim real-device tests or 120 FPS without measurement.
 
 ## Review focus
 1. v1.2 JSON round-trip must preserve alarm identity, weekdays, sound, wake-check and added fields across native rewrites.

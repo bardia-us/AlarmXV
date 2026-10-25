@@ -7,7 +7,6 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
 import android.graphics.PixelFormat
 import android.graphics.Typeface
 import android.media.AudioAttributes
@@ -30,6 +29,8 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextClock
 import android.widget.TextView
+import java.util.UUID
+import kotlin.math.roundToInt
 
 class RingingService : Service() {
     private val handler = Handler(Looper.getMainLooper())
@@ -39,15 +40,17 @@ class RingingService : Service() {
     private var wakeLock: PowerManager.WakeLock? = null
     private var fallbackToneActive = false
     private var volumeGuardEnabled = false
+    private var volumeOverrideActive = false
     private var guardedVolume = 0
     private var currentAlarm: AlarmData? = null
     private var currentSnoozeCount = 0
     private var challengeInProgress = false
     private var alarmActivityVisible = false
     private var guardOverlay: View? = null
+    private var sessionToken = ""
 
     private val restoreAlarmScreen = Runnable {
-        if (alarmActivityVisible || currentAlarm == null) return@Runnable
+        if (alarmActivityVisible || currentAlarm == null || currentAlarm?.isNormal == true) return@Runnable
         showGuardOverlay()
         if (guardOverlay != null) launchAlarmActivity()
     }
@@ -79,7 +82,18 @@ class RingingService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (intent?.action == actionDismissNormal) {
+            dismissNormalSession(intent.getStringExtra(extraAlarmId).orEmpty(),
+                intent.getStringExtra(extraSessionToken).orEmpty())
+            if (currentAlarm == null) stopSelf()
+            return START_NOT_STICKY
+        }
         if (intent?.action == actionPauseForChallenge) {
+            if (currentAlarm == null) {
+                stopSelf()
+                return START_NOT_STICKY
+            }
+            if (currentAlarm?.isNormal == true) return START_NOT_STICKY
             challengeInProgress = true
             pauseRingingForChallenge()
             return START_NOT_STICKY
@@ -92,17 +106,26 @@ class RingingService : Service() {
             return START_NOT_STICKY
         }
         val snoozeCount = intent.getIntExtra(extraSnoozeCount, 0)
+        if (currentAlarm?.id == alarm.id && currentSnoozeCount == snoozeCount &&
+            !challengeInProgress && currentAlarm == alarm
+        ) return START_NOT_STICKY
+        // A new session owns the one player and its volume override; release the previous one first.
+        stopSoundAndVibration()
+        stopVolumeOverride()
+        removeGuardOverlay()
         currentAlarm = alarm
         currentSnoozeCount = snoozeCount
+        sessionToken = UUID.randomUUID().toString()
         challengeInProgress = false
 
         startForeground(notificationId, buildNotification(alarm, snoozeCount, false))
         acquireWakeLock()
-        configureVolumeGuard(true)
+        if (alarm.isNormal) configureNormalVolume(alarm) else configureVolumeGuard(true)
         startSound(alarm)
         startVibration()
         handler.removeCallbacks(restoreAlarmScreen)
-        if (!alarmActivityVisible) handler.postDelayed(restoreAlarmScreen, 300)
+        if (alarmActivityVisible) launchAlarmActivity()
+        else if (!alarm.isNormal) handler.postDelayed(restoreAlarmScreen, 300)
         return START_NOT_STICKY
     }
 
@@ -116,11 +139,16 @@ class RingingService : Service() {
         toneGenerator = null
         vibrator?.cancel()
         vibrator = null
-        stopVolumeGuard()
+        stopVolumeOverride()
         wakeLock?.takeIf { it.isHeld }?.release()
         wakeLock = null
         removeGuardOverlay()
+        val endedAlarm = currentAlarm
         currentAlarm = null
+        if (endedAlarm != null) {
+            sendBroadcast(Intent(actionSessionEnded).setPackage(packageName)
+                .putExtra(extraAlarmId, endedAlarm.id).putExtra(extraSessionToken, sessionToken))
+        }
         if (activeInstance === this) activeInstance = null
         stopForeground(STOP_FOREGROUND_REMOVE)
         super.onDestroy()
@@ -133,17 +161,11 @@ class RingingService : Service() {
         snoozeCount: Int,
         challengeInProgress: Boolean,
     ): Notification {
-        val ringIntent = AlarmRingActivity.createIntent(this, alarm, snoozeCount)
+        val ringIntent = AlarmRingActivity.createIntent(this, alarm, snoozeCount, sessionToken)
         val fullScreenIntent = PendingIntent.getActivity(
             this,
             0,
-            ringIntent.apply {
-                data = Uri.Builder()
-                    .scheme("alarmxv")
-                    .authority("ring")
-                    .appendPath(alarm.id)
-                    .build()
-            },
+            ringIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -155,7 +177,9 @@ class RingingService : Service() {
             .setSmallIcon(R.drawable.ic_stat_alarm)
             .setContentTitle(alarm.label)
             .setContentText(
-                if (challengeInProgress) {
+                if (alarm.isNormal) {
+                    "آلارم معمولی · امکان قطع مستقیم از اعلان"
+                } else if (challengeInProgress) {
                     "Challenge timer is running"
                 } else {
                     "Alarm ringing - tap to wake up"
@@ -168,6 +192,19 @@ class RingingService : Service() {
             .setContentIntent(fullScreenIntent)
             .setFullScreenIntent(fullScreenIntent, true)
             .apply {
+                if (alarm.isNormal) {
+                    val dismiss = PendingIntent.getService(
+                        this@RingingService, 0,
+                        Intent(this@RingingService, RingingService::class.java).apply {
+                            action = actionDismissNormal
+                            data = Uri.Builder().scheme("alarmxv").authority("dismiss")
+                                .appendPath(alarm.id).appendPath(sessionToken).build()
+                            putExtra(extraAlarmId, alarm.id)
+                            putExtra(extraSessionToken, sessionToken)
+                        }, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+                    )
+                    addAction(Notification.Action.Builder(null, "قطع آلارم", dismiss).build())
+                }
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_IMMEDIATE)
                 }
@@ -177,7 +214,7 @@ class RingingService : Service() {
 
     private fun pauseRingingForChallenge() {
         stopSoundAndVibration()
-        stopVolumeGuard()
+        stopVolumeOverride()
         currentAlarm?.let { alarm ->
             getSystemService(NotificationManager::class.java).notify(
                 notificationId,
@@ -191,7 +228,7 @@ class RingingService : Service() {
         handler.removeCallbacks(restoreAlarmScreen)
         if (visible) {
             removeGuardOverlay()
-        } else if (currentAlarm != null) {
+        } else if (currentAlarm != null && currentAlarm?.isNormal != true) {
             handler.postDelayed(restoreAlarmScreen, 300)
         }
     }
@@ -201,6 +238,7 @@ class RingingService : Service() {
             !Settings.canDrawOverlays(this)
         ) return
         val alarm = currentAlarm ?: return
+        if (alarm.isNormal) return
         val windowManager = getSystemService(WindowManager::class.java)
         val appearance = NativeAppearance(this)
         val content = LinearLayout(this).apply {
@@ -278,9 +316,7 @@ class RingingService : Service() {
         val alarm = currentAlarm ?: return
         runCatching {
             startActivity(
-                AlarmRingActivity.createIntent(this, alarm, currentSnoozeCount).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-                },
+                AlarmRingActivity.createIntent(this, alarm, currentSnoozeCount, sessionToken),
             )
         }
     }
@@ -306,6 +342,8 @@ class RingingService : Service() {
     }
 
     private fun startSound(alarm: AlarmData) {
+        // Some devices clamp STREAM_ALARM above zero; an explicit silent alarm stays silent.
+        if (alarm.isNormal && alarm.volumeMode == "custom" && alarm.volumePercent == 0) return
         if (mediaPlayer?.isPlaying == true || fallbackToneActive) return
         val alarmUri = alarm.alarmSoundUri?.let(Uri::parse)
             ?: Settings.System.DEFAULT_ALARM_ALERT_URI
@@ -336,6 +374,7 @@ class RingingService : Service() {
     private fun startFallbackTone() {
         mediaPlayer?.release()
         mediaPlayer = null
+        if (currentAlarm?.let { it.isNormal && it.volumeMode == "custom" && it.volumePercent == 0 } == true) return
         if (fallbackToneActive) return
         toneGenerator = ToneGenerator(AudioManager.STREAM_ALARM, 100)
         fallbackToneActive = true
@@ -364,7 +403,7 @@ class RingingService : Service() {
     }
 
     private fun configureVolumeGuard(enabled: Boolean) {
-        stopVolumeGuard()
+        stopVolumeOverride()
         if (!enabled) return
         val audioManager = getSystemService(AudioManager::class.java)
         val initial = audioManager.getStreamVolume(AudioManager.STREAM_ALARM)
@@ -377,15 +416,44 @@ class RingingService : Service() {
             audioManager.setStreamVolume(AudioManager.STREAM_ALARM, guardedVolume, 0)
         }
         volumeGuardEnabled = true
-        guardRunningInProcess = true
+        volumeOverrideActive = true
+        volumeSessionRunningInProcess = true
         handler.post(volumeMonitor)
     }
 
-    private fun stopVolumeGuard() {
+    private fun configureNormalVolume(alarm: AlarmData) {
+        if (alarm.volumeMode != "custom") return
+        val audioManager = getSystemService(AudioManager::class.java)
+        val original = audioManager.getStreamVolume(AudioManager.STREAM_ALARM)
+        val maximum = audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM)
+        val requested = if (alarm.volumePercent == 0) 0 else
+            (maximum * alarm.volumePercent / 100f).roundToInt().coerceAtLeast(1).coerceAtMost(maximum)
+        volumePreferences(this).edit().putBoolean(volumeActiveKey, true)
+            .putInt(volumeOriginalKey, original).apply()
+        volumeOverrideActive = true
+        volumeSessionRunningInProcess = true
+        runCatching { audioManager.setStreamVolume(AudioManager.STREAM_ALARM, requested, 0) }
+        // No monitor in normal mode: hardware volume controls remain under the user's control.
+    }
+
+    private fun stopVolumeOverride() {
         handler.removeCallbacks(volumeMonitor)
-        if (volumeGuardEnabled) restoreStoredVolume(this)
+        if (volumeOverrideActive) restoreStoredVolume(this)
         volumeGuardEnabled = false
-        guardRunningInProcess = false
+        volumeOverrideActive = false
+        volumeSessionRunningInProcess = false
+    }
+
+    private fun dismissNormalSession(alarmId: String, expectedToken: String): Boolean {
+        val alarm = currentAlarm ?: return false
+        if (!alarm.isNormal || alarm.id != alarmId || expectedToken.isEmpty() || sessionToken != expectedToken) {
+            return false
+        }
+        runCatching { AlarmScheduler.cancelChallengeTimeout(this, alarm.id) }
+        runCatching { WakeCheckScheduler.cancel(this, alarm.id) }
+        RingStateStore.clear(this, alarm.id)
+        stopSelf()
+        return true
     }
 
     companion object {
@@ -393,6 +461,10 @@ class RingingService : Service() {
         private const val notificationId = 1701
         private const val extraAlarmJson = "alarm_json"
         private const val extraSnoozeCount = "snooze_count"
+        const val extraAlarmId = "alarm_id"
+        const val extraSessionToken = "ring_session_token"
+        const val actionSessionEnded = "com.alarmxv.alarm_xv.ACTION_RING_SESSION_ENDED"
+        private const val actionDismissNormal = "com.alarmxv.alarm_xv.ACTION_DISMISS_NORMAL_ALARM"
         private const val actionPauseForChallenge =
             "com.alarmxv.alarm_xv.ACTION_PAUSE_FOR_CHALLENGE"
         private const val volumePreferencesName = "alarm_xv_volume_guard"
@@ -400,7 +472,7 @@ class RingingService : Service() {
         private const val volumeOriginalKey = "original"
 
         @Volatile
-        private var guardRunningInProcess = false
+        private var volumeSessionRunningInProcess = false
 
         fun createIntent(context: Context, alarm: AlarmData, snoozeCount: Int): Intent =
             Intent(context, RingingService::class.java).apply {
@@ -412,14 +484,25 @@ class RingingService : Service() {
             context.stopService(Intent(context, RingingService::class.java))
         }
 
+        fun isNormalSessionActive(alarmId: String, expectedToken: String): Boolean =
+            activeInstance?.let { it.currentAlarm?.isNormal == true && it.currentAlarm?.id == alarmId &&
+                expectedToken.isNotEmpty() && it.sessionToken == expectedToken } == true
+
+        fun dismissNormal(alarmId: String, expectedToken: String): Boolean =
+            activeInstance?.dismissNormalSession(alarmId, expectedToken) == true
+
         fun pauseForChallenge(context: Context) {
             context.startService(Intent(context, RingingService::class.java).apply {
                 action = actionPauseForChallenge
             })
         }
 
-        fun setAlarmActivityVisible(visible: Boolean) {
-            activeInstance?.onAlarmActivityVisibilityChanged(visible)
+        fun setAlarmActivityVisible(visible: Boolean, alarmId: String, expectedToken: String) {
+            activeInstance?.let { service ->
+                if (service.currentAlarm?.id == alarmId && service.sessionToken == expectedToken) {
+                    service.onAlarmActivityVisibilityChanged(visible)
+                }
+            }
         }
 
         fun resumeRinging(context: Context, alarm: AlarmData, snoozeCount: Int) {
@@ -448,20 +531,19 @@ class RingingService : Service() {
         }
 
         fun restoreOrphanedVolume(context: Context) {
-            if (!guardRunningInProcess) restoreStoredVolume(context)
+            if (!volumeSessionRunningInProcess) restoreStoredVolume(context)
         }
 
         private fun restoreStoredVolume(context: Context) {
             val preferences = volumePreferences(context)
             if (!preferences.getBoolean(volumeActiveKey, false)) return
             val original = preferences.getInt(volumeOriginalKey, -1)
-            if (original >= 0) {
-                runCatching {
+            val restored = original < 0 || runCatching {
                     context.getSystemService(AudioManager::class.java)
                         .setStreamVolume(AudioManager.STREAM_ALARM, original, 0)
-                }
-            }
-            preferences.edit().clear().apply()
+                    true
+                }.getOrDefault(false)
+            if (restored) preferences.edit().clear().apply()
         }
 
         private fun volumePreferences(context: Context) = context.getSharedPreferences(

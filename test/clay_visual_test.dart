@@ -122,7 +122,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('تنظیمات'));
     await capture('settings-light');
-    await tester.tap(find.widgetWithText(ChoiceChip, 'تیره'));
+    await tester.tap(find.byTooltip('رفتن به حالت تیره'));
     await capture('settings-dark');
     await tester.pageBack();
     await capture('home-dark');

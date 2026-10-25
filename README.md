@@ -11,6 +11,13 @@ An Android alarm clock for heavy sleepers — local alarms, wake-up missions, an
 
 </div>
 
+<div align="center">
+<img src="docs/alarmxv-light.png" width="230" alt="AlarmXV preview in light mode" />
+&nbsp;&nbsp;
+<img src="docs/alarmxv-dark.png" width="230" alt="AlarmXV preview in dark mode" />
+<p><sub>Design preview · نمونهٔ زبان طراحی؛ نسخهٔ جدید هنوز منتشر نشده</sub></p>
+</div>
+
 ---
 
 ## فارسی
@@ -28,6 +35,10 @@ AlarmXV برای وقتی ساخته شده که دکمهٔ خاموش‌کرد�
 ### در حال توسعه — 2.0 Preview
 
 طراحی Clay با عمق نرم، تم روشن/تیره/سیستم و هشت رنگ قابل انتخاب؛ گروه‌های آلارم، جست‌وجو، تکثیر، تنظیم سختی مأموریت‌ها، تایپ و ترتیب اعداد. نمایش تازه‌های نسخه و بررسی دستی آپدیت هم بخشی از این بازطراحی است.
+
+دو حالت جدا داری: «زنگ عادی» برای قطع مستقیم و صدای قابل تنظیم، و «بیداری مأموریتی» برای وقتی که می‌خواهی با حل مأموریت بیدار بمانی. حالت عادی صدای گوشی را به حداکثر قفل نمی‌کند و بررسی اجباری بیداری ندارد.
+
+تغییر روشن/تیره با دکمهٔ ماه و خورشید بالای صفحه انجام می‌شود؛ پیش‌فرض از سیستم پیروی می‌کند. نوار ناوبری Android در دسترس می‌ماند و منوها و دکمه‌های پایین از شکل و عمق مشترک Clay استفاده می‌کنند.
 
 این پیش‌نمایش هنوز انتشار عمومی نیست. [وضعیت بررسی و تست‌ها](docs/qa/STATUS.md) محدودیت‌ها و نتیجهٔ واقعی هر مرحله را ثبت می‌کند؛ نسخهٔ پایدار فعلی همان 1.2.0 است.
 
@@ -56,6 +67,10 @@ AlarmXV helps you stay awake after your alarm. Set a weekly alarm, choose a wake
 ### In development — 2.0 Preview
 
 A coherent soft-depth Clay interface; light, dark and system themes; eight accents; alarm groups; search and duplication; configurable missions; typing and number ordering; in-app release notes and an on-demand update check.
+
+Choose **Normal alarm** for direct dismissal and freely adjustable system/custom volume, or **Mission alarm** for the stricter wake-up flow. Normal alarms do not enforce maximum volume or mandatory wake checks.
+
+The animated moon/sun control switches appearance while system following remains the default. Android navigation stays available; rounded menus and floating action edges share the same Clay surfaces.
 
 The preview is not a public release. See the [QA status](docs/qa/STATUS.md) for completed checks and device-test limitations. Version 1.2.0 remains the current public release.
 

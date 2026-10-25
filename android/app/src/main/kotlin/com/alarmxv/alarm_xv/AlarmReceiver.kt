@@ -11,10 +11,16 @@ class AlarmReceiver : BroadcastReceiver() {
         val alarmId = intent.getStringExtra(extraAlarmId) ?: return
         val alarm = AlarmStore.find(context, alarmId) ?: return
         if (!alarm.enabled) return
+        val kind = intent.getStringExtra(extraKind) ?: "main"
+        if (alarm.isNormal && kind in setOf("wake_failure", "challenge_timeout")) {
+            AlarmScheduler.cancelChallengeTimeout(context, alarm.id)
+            WakeCheckScheduler.cancel(context, alarm.id)
+            RingStateStore.clear(context, alarm.id)
+            return
+        }
         RingingService.restoreOrphanedVolume(context)
         RingStateStore.clear(context, alarm.id)
 
-        val kind = intent.getStringExtra(extraKind) ?: "main"
         if (kind == "main") {
             WakeFailureStore.clear(context, alarm.id)
             AlarmScheduler.cancelChallengeTimeout(context, alarm.id)

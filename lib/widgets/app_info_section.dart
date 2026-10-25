@@ -17,7 +17,7 @@ class WhatsNewSheet {
 
   static Future<void> show(
     BuildContext context, {
-    String version = '2.0.0-preview.1',
+    String version = '2.0.0-preview.2',
   }) => showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -49,9 +49,14 @@ class WhatsNewSheet {
             const SizedBox(height: 24),
             for (final item in const [
               (
+                Icons.alarm_on_rounded,
+                'زنگ عادی یا بیداری مأموریتی',
+                'حالت عادی را مستقیم قطع کن؛ از صدای فعلی گوشی یا بلندی دلخواه استفاده کن. حالت مأموریتی جدا باقی مانده.',
+              ),
+              (
                 Icons.palette_outlined,
                 'یک ظاهر تازه',
-                'طراحی نرم Clay، تم روشن و تیره، رنگ‌های قابل انتخاب.',
+                'طراحی نرم Clay، منوهای گرد و نوارهای پایین با محوشدن ملایم؛ بدون افکت شیشه‌ای سنگین.',
               ),
               (
                 Icons.folder_outlined,

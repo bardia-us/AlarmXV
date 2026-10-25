@@ -1,6 +1,6 @@
 # Android acceptance matrix
 
-Preview release gate: NOT performed on a physical device. Unit/widget success does not substitute for the rows below. No device or working installed emulator image was available at development time.
+Preview release gate: physical testing is in progress on a connected Samsung Galaxy A34 (Android16,120Hz). Unit/widget success does not substitute for the pending rows below.
 
 | Scenario | Expected behavior | Evidence now |
 |---|---|---|

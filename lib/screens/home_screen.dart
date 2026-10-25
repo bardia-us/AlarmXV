@@ -11,6 +11,7 @@ import '../theme/settings_controller.dart';
 import '../widgets/alarm_editor_sheet.dart';
 import '../widgets/clay_components.dart';
 import '../widgets/app_info_section.dart';
+import '../widgets/theme_toggle_button.dart';
 import 'group_manager_screen.dart';
 import 'settings_screen.dart';
 
@@ -47,7 +48,10 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
+class _HomeScreenState extends State<HomeScreen>
+    with WidgetsBindingObserver, SingleTickerProviderStateMixin {
+  late final AnimationController _groupTransition;
+  late final Animation<double> _groupFade;
   List<Alarm> _alarms = [];
   bool _loading = true, _busy = false, _releaseNotesChecked = false;
   bool _scheduleIncomplete = false;
@@ -55,20 +59,78 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final _search = TextEditingController();
   AlarmSort _sort = AlarmSort.next;
   AlarmPermissionStatus? _permissions;
+  bool get _needsChallengeAccess => _alarms.any(
+    (alarm) => alarm.isEnabled && alarm.mode == AlarmMode.challenge,
+  );
+  bool _hasRequiredAccess(
+    AlarmPermissionStatus status, [
+    List<Alarm>? alarms,
+  ]) =>
+      (alarms ?? _alarms).any(
+        (alarm) => alarm.isEnabled && alarm.mode == AlarmMode.challenge,
+      )
+      ? status.allGranted
+      : status.normalGranted;
   int _readGeneration = 0;
   @override
   void initState() {
     super.initState();
+    _groupTransition = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 360),
+      value: 1,
+    );
+    _groupFade = _groupTransition.drive(
+      Tween<double>(
+        begin: .35,
+        end: 1,
+      ).chain(CurveTween(curve: Curves.easeOutCubic)),
+    );
     WidgetsBinding.instance.addObserver(this);
     _load();
   }
 
   @override
   void dispose() {
+    _groupTransition.dispose();
     WidgetsBinding.instance.removeObserver(this);
     _search.dispose();
     super.dispose();
   }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (reduceMotion(context) && _groupTransition.isAnimating) {
+      _groupTransition.stop();
+      _groupTransition.value = 1;
+    }
+  }
+
+  void _selectGroup(String? group) {
+    if (_group == group) return;
+    setState(() => _group = group);
+    if (reduceMotion(context)) {
+      _groupTransition.value = 1;
+    } else {
+      HapticFeedback.selectionClick();
+      _groupTransition.forward(from: 0);
+    }
+  }
+
+  Widget _groupContent(Widget sliver) => SliverFadeTransition(
+    opacity: _groupFade,
+    sliver: AnimatedBuilder(
+      animation: _groupTransition,
+      child: sliver,
+      builder: (context, child) => SliverPadding(
+        padding: EdgeInsets.only(
+          top: 8 * (1 - Curves.easeOutCubic.transform(_groupTransition.value)),
+        ),
+        sliver: child,
+      ),
+    ),
+  );
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -135,7 +197,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             result.scheduledCount < next.where((a) => a.isEnabled).length;
       });
       if (_scheduleIncomplete ||
-          (next.any((a) => a.isEnabled) && !result.permissions.allGranted))
+          (next.any((a) => a.isEnabled) &&
+              !_hasRequiredAccess(result.permissions, next)))
         _message(
           'زنگ ذخیره شد، اما زمان‌بندی کامل نشد؛ دسترسی‌ها را بررسی کن و دوباره تلاش کن.',
         );
@@ -345,7 +408,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       final filtered = _filtered();
       final scheme = Theme.of(context).colorScheme;
       return Scaffold(
+        extendBody: true,
         body: SafeArea(
+          bottom: false,
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 760),
@@ -390,6 +455,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                   ],
                                 ),
                               ),
+                              ClayThemeToggle(controller: widget.settings),
+                              const SizedBox(width: 8),
                               ClayPress(
                                 child: ClaySurface(
                                   padding: EdgeInsets.zero,
@@ -414,18 +481,20 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             _NextAlarmHero(
                               alarms: _alarms,
                               ready:
-                                  _permissions?.allGranted == true &&
+                                  _permissions != null &&
+                                  _hasRequiredAccess(_permissions!) &&
                                   !_scheduleIncomplete,
                               schedulingFailed: _scheduleIncomplete,
                               onTap: _edit,
                             ),
                           if (_permissions case final permissions?
-                              when !permissions.allGranted) ...[
+                              when !_hasRequiredAccess(permissions)) ...[
                             const SizedBox(height: 18),
                             _permissionPanel(permissions),
                           ],
                           if (_scheduleIncomplete &&
-                              _permissions?.allGranted == true) ...[
+                              _permissions != null &&
+                              _hasRequiredAccess(_permissions!)) ...[
                             const SizedBox(height: 18),
                             ClaySurface(
                               elevated: false,
@@ -465,6 +534,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                 ' زنگ فعال از ' +
                                 _alarms.length.toString(),
                             trailing: PopupMenuButton<AlarmSort>(
+                              clipBehavior: Clip.antiAlias,
                               tooltip: 'مرتب‌سازی',
                               initialValue: _sort,
                               onSelected: (v) => setState(() => _sort = v),
@@ -487,6 +557,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           ),
                           TextField(
                             controller: _search,
+                            scrollPadding: EdgeInsets.only(
+                              bottom:
+                                  124 +
+                                  MediaQuery.paddingOf(context).bottom +
+                                  MediaQuery.textScalerOf(context).scale(24),
+                            ),
                             onChanged: (_) => setState(() {}),
                             decoration: InputDecoration(
                               hintText: 'جست‌وجوی زنگ یا گروه',
@@ -509,8 +585,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                 ChoiceChip(
                                   label: const Text('همه'),
                                   selected: _group == null,
-                                  onSelected: (_) =>
-                                      setState(() => _group = null),
+                                  onSelected: (_) => _selectGroup(null),
                                 ),
                                 for (final group
                                     in widget.settings.settings.groups) ...[
@@ -522,8 +597,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                     ),
                                     label: Text(group.name),
                                     selected: _group == group.id,
-                                    onSelected: (_) =>
-                                        setState(() => _group = group.id),
+                                    onSelected: (_) => _selectGroup(group.id),
                                   ),
                                 ],
                                 const SizedBox(width: 8),
@@ -560,65 +634,64 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       ),
                     )
                   else if (filtered.isEmpty)
-                    SliverToBoxAdapter(
-                      child: _empty(
-                        _alarms.isEmpty
-                            ? Icons.alarm_add_rounded
-                            : Icons.search_off_rounded,
-                        _alarms.isEmpty
-                            ? 'اولین صبحِ برنامه‌ریزی‌شده'
-                            : 'زنگی پیدا نشد',
-                        _alarms.isEmpty
-                            ? 'زمان، روزها و مأموریت بیدارشدن رو انتخاب کن.'
-                            : 'جست‌وجو یا فیلتر گروه رو عوض کن.',
-                        action: _alarms.isEmpty
-                            ? 'ساخت اولین زنگ'
-                            : 'نمایش همه',
-                        onAction: _alarms.isEmpty
-                            ? _edit
-                            : () => setState(() {
-                                _search.clear();
-                                _group = null;
-                              }),
+                    _groupContent(
+                      SliverToBoxAdapter(
+                        child: _empty(
+                          _alarms.isEmpty
+                              ? Icons.alarm_add_rounded
+                              : Icons.search_off_rounded,
+                          _alarms.isEmpty
+                              ? 'اولین صبحِ برنامه‌ریزی‌شده'
+                              : 'زنگی پیدا نشد',
+                          _alarms.isEmpty
+                              ? 'زمان، روزها و نوع بیدارشدن رو انتخاب کن.'
+                              : 'جست‌وجو یا فیلتر گروه رو عوض کن.',
+                          action: _alarms.isEmpty
+                              ? 'ساخت اولین زنگ'
+                              : 'نمایش همه',
+                          onAction: _alarms.isEmpty
+                              ? _edit
+                              : () {
+                                  setState(_search.clear);
+                                  _selectGroup(null);
+                                },
+                        ),
                       ),
                     )
                   else
-                    SliverPadding(
-                      padding: const EdgeInsets.symmetric(horizontal: 22),
-                      sliver: _AnimatedAlarmSliver(
-                        alarms: filtered,
-                        builder: _alarmCard,
+                    _groupContent(
+                      SliverPadding(
+                        padding: const EdgeInsets.symmetric(horizontal: 22),
+                        sliver: _AnimatedAlarmSliver(
+                          alarms: filtered,
+                          builder: _alarmCard,
+                        ),
                       ),
                     ),
-                  const SliverToBoxAdapter(child: SizedBox(height: 30)),
+                  SliverToBoxAdapter(
+                    child: SizedBox(
+                      height:
+                          124 +
+                          MediaQuery.paddingOf(context).bottom +
+                          MediaQuery.textScalerOf(context).scale(24),
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
         ),
-        bottomNavigationBar: SafeArea(
-          top: false,
-          child: Center(
-            heightFactor: 1,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 760),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(22, 8, 22, 12),
-                child: ClayPress(
-                  child: FilledButton.icon(
-                    onPressed: _busy || _loading || _loadError != null
-                        ? null
-                        : _edit,
-                    icon: _busy
-                        ? const SizedBox.square(
-                            dimension: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.add_alarm_rounded),
-                    label: const Text('زنگ جدید'),
-                  ),
-                ),
-              ),
+        bottomNavigationBar: ClayActionFooter(
+          child: ClayPress(
+            child: FilledButton.icon(
+              onPressed: _busy || _loading || _loadError != null ? null : _edit,
+              icon: _busy
+                  ? const SizedBox.square(
+                      dimension: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.add_alarm_rounded),
+              label: const Text('زنگ جدید'),
             ),
           ),
         ),
@@ -705,6 +778,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     onChanged: _busy ? null : (v) => _toggle(alarm, v),
                   ),
                   PopupMenuButton<String>(
+                    clipBehavior: Clip.antiAlias,
                     tooltip: 'گزینه‌های ' + alarm.label,
                     enabled: !_busy,
                     padding: EdgeInsets.zero,
@@ -743,14 +817,18 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       icon: groupIcon(group.icon),
                       color: accessibleGroupColor(context, Color(group.color)),
                     ),
-                  StatusPill(
-                    alarm.challenges.take(2).map(missionName).join('، ') +
-                        (alarm.challenges.length > 2
-                            ? ' +' + (alarm.challenges.length - 2).toString()
-                            : ''),
-                    icon: Icons.bolt_rounded,
-                  ),
-                  if (alarm.wakeCheck.enabled)
+                  if (alarm.mode == AlarmMode.normal)
+                    const StatusPill('زنگ عادی', icon: Icons.alarm_rounded)
+                  else
+                    StatusPill(
+                      alarm.challenges.take(2).map(missionName).join('، ') +
+                          (alarm.challenges.length > 2
+                              ? ' +' + (alarm.challenges.length - 2).toString()
+                              : ''),
+                      icon: Icons.bolt_rounded,
+                    ),
+                  if (alarm.mode == AlarmMode.challenge &&
+                      alarm.wakeCheck.enabled)
                     const StatusPill(
                       'بررسی بیداری',
                       icon: Icons.verified_outlined,
@@ -777,8 +855,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           style: TextStyle(fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: 6),
-        const Text(
-          'اندروید برای زمان دقیق و نمایش زنگ روی صفحه قفل به این دسترسی‌ها نیاز داره.',
+        Text(
+          _needsChallengeAccess
+              ? 'اندروید برای زمان دقیق و نمایش زنگ روی صفحه قفل به این دسترسی‌ها نیاز داره.'
+              : 'زنگ عادی برای زمان دقیق و نمایش اعلان به این دسترسی‌ها نیاز داره.',
         ),
         const SizedBox(height: 10),
         Wrap(
@@ -801,13 +881,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 }),
                 child: const Text('اعلان‌ها'),
               ),
-            if (!status.fullScreen)
+            if (_needsChallengeAccess && !status.fullScreen)
               OutlinedButton(
                 onPressed: () =>
                     _permissionAction(widget.storage.openFullScreenSettings),
                 child: const Text('نمایش تمام‌صفحه'),
               ),
-            if (!status.overlay)
+            if (_needsChallengeAccess && !status.overlay)
               OutlinedButton(
                 onPressed: () =>
                     _permissionAction(widget.storage.openOverlaySettings),

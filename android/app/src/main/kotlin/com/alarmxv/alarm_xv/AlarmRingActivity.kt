@@ -4,13 +4,17 @@ import android.app.Activity
 import android.animation.ValueAnimator
 import android.app.KeyguardManager
 import android.content.Context
+import android.content.BroadcastReceiver
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.res.ColorStateList
 import android.graphics.Typeface
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.media.AudioManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -18,7 +22,6 @@ import android.os.Looper
 import android.view.Gravity
 import android.view.View
 import android.view.WindowInsets
-import android.view.WindowInsetsController
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
@@ -70,6 +73,19 @@ class AlarmRingActivity : Activity(), SensorEventListener {
     private var ringPhase = phaseRinging
     private var challengeDeadlineMillis = 0L
     private var endingAlarm = false
+    private var sessionToken = ""
+    private var sessionReceiverRegistered = false
+    private val sessionEndedReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (::alarm.isInitialized && alarm.isNormal &&
+                intent.getStringExtra(RingingService.extraAlarmId) == alarm.id &&
+                intent.getStringExtra(RingingService.extraSessionToken) == sessionToken
+            ) {
+                endingAlarm = true
+                finish()
+            }
+        }
+    }
 
     private lateinit var challengeBadge: TextView
     private lateinit var challengeProgressText: TextView
@@ -118,20 +134,39 @@ class AlarmRingActivity : Activity(), SensorEventListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         appearance = NativeAppearance(this)
-        configureLockScreen()
+        volumeControlStream = AudioManager.STREAM_ALARM
+        sensorManager = getSystemService(SensorManager::class.java)
+        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+        val sessionFilter = IntentFilter(RingingService.actionSessionEnded)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(sessionEndedReceiver, sessionFilter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            @Suppress("DEPRECATION")
+            registerReceiver(sessionEndedReceiver, sessionFilter)
+        }
+        sessionReceiverRegistered = true
+        showAlarmIntent(intent, savedInstanceState)
+    }
+
+    private fun showAlarmIntent(intent: Intent, savedInstanceState: Bundle?) {
+        handler.removeCallbacksAndMessages(null)
+        memoryToken += 1
+        sensorManager.unregisterListener(this)
+        resetChallengeProgress()
+        ringPhase = phaseRinging
+        endingAlarm = false
         alarm = AlarmData.fromJson(
             JSONObject(intent.getStringExtra(extraAlarmJson) ?: error("Missing alarm")),
         )
+        sessionToken = intent.getStringExtra(RingingService.extraSessionToken).orEmpty()
         snoozeCount = intent.getIntExtra(extraSnoozeCount, 0)
+        configureLockScreen()
         challengeOrder = alarm.challenges.toList()
-        if (challengeOrder.isEmpty()) challengeOrder = listOf("math")
-
-        sensorManager = getSystemService(SensorManager::class.java)
-        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
-        restoreState(savedInstanceState)
+        if (challengeOrder.isEmpty() && !alarm.isNormal) challengeOrder = listOf("math")
+        if (!alarm.isNormal) restoreState(savedInstanceState)
         setContentView(buildScreen())
-        hideSystemBars()
-        if (ringPhase == phaseChallenge && challengeDeadlineMillis > System.currentTimeMillis()) {
+        applySystemBars()
+        if (!alarm.isNormal && ringPhase == phaseChallenge && challengeDeadlineMillis > System.currentTimeMillis()) {
             RingingService.pauseForChallenge(this)
             showCurrentChallenge(resumeDeadline = true)
         } else {
@@ -141,8 +176,13 @@ class AlarmRingActivity : Activity(), SensorEventListener {
 
     override fun onResume() {
         super.onResume()
-        RingingService.setAlarmActivityVisible(true)
-        hideSystemBars()
+        if (alarm.isNormal && !RingingService.isNormalSessionActive(alarm.id, sessionToken)) {
+            endingAlarm = true
+            finish()
+            return
+        }
+        updateServiceVisibility(true)
+        applySystemBars()
         if (ringPhase == phaseChallenge && challengeDeadlineMillis <= System.currentTimeMillis()) {
             challengeTimedOut()
             return
@@ -153,10 +193,10 @@ class AlarmRingActivity : Activity(), SensorEventListener {
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) {
-            RingingService.setAlarmActivityVisible(true)
-            hideSystemBars()
+            updateServiceVisibility(true)
+            applySystemBars()
         } else if (!endingAlarm) {
-            RingingService.setAlarmActivityVisible(false)
+            updateServiceVisibility(false)
         }
     }
 
@@ -165,9 +205,13 @@ class AlarmRingActivity : Activity(), SensorEventListener {
         val nextAlarmId = runCatching {
             JSONObject(intent.getStringExtra(extraAlarmJson) ?: "{}").optString("id")
         }.getOrDefault("")
+        val nextSession = intent.getStringExtra(RingingService.extraSessionToken).orEmpty()
         setIntent(intent)
-        if (::alarm.isInitialized && nextAlarmId.isNotEmpty() && nextAlarmId != alarm.id) {
-            recreate()
+        if (::alarm.isInitialized && nextAlarmId.isNotEmpty() &&
+            (nextAlarmId != alarm.id || nextSession != sessionToken)
+        ) {
+            if (nextAlarmId != alarm.id) persistState() else RingStateStore.clear(this, alarm.id)
+            showAlarmIntent(intent, null)
         } else if (::alarm.isInitialized && nextAlarmId == alarm.id &&
             RingStateStore.load(this, alarm.id) == null
         ) {
@@ -178,15 +222,17 @@ class AlarmRingActivity : Activity(), SensorEventListener {
 
     override fun onPause() {
         sensorManager.unregisterListener(this)
-        if (!endingAlarm) RingingService.setAlarmActivityVisible(false)
+        if (!endingAlarm) updateServiceVisibility(false)
         persistState()
         super.onPause()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        val state = createStateJson()
-        outState.putString(savedStateKey, state.toString())
-        if (!isFinishing) RingStateStore.save(this, alarm.id, state)
+        if (!alarm.isNormal) {
+            val state = createStateJson()
+            outState.putString(savedStateKey, state.toString())
+            if (!isFinishing) RingStateStore.save(this, alarm.id, state)
+        }
         super.onSaveInstanceState(outState)
     }
 
@@ -194,50 +240,45 @@ class AlarmRingActivity : Activity(), SensorEventListener {
         memoryToken += 1
         handler.removeCallbacksAndMessages(null)
         sensorManager.unregisterListener(this)
+        if (sessionReceiverRegistered) unregisterReceiver(sessionEndedReceiver)
+        updateServiceVisibility(false)
         super.onDestroy()
     }
 
+    private fun updateServiceVisibility(visible: Boolean) {
+        if (::alarm.isInitialized) RingingService.setAlarmActivityVisible(visible, alarm.id, sessionToken)
+    }
+
     @Deprecated("Alarm challenges must not be bypassed with Back")
-    override fun onBackPressed() = Unit
+    override fun onBackPressed() {
+        if (::alarm.isInitialized && alarm.isNormal) super.onBackPressed()
+    }
 
     private fun configureLockScreen() {
-        window.addFlags(
-            WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
-                WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON,
-        )
+        if (alarm.isNormal) {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
+                WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON or
+                WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
+                WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        } else {
+            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
+                WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON)
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
             setShowWhenLocked(true)
             setTurnScreenOn(true)
-            getSystemService(KeyguardManager::class.java).requestDismissKeyguard(this, null)
+            if (!alarm.isNormal) getSystemService(KeyguardManager::class.java).requestDismissKeyguard(this, null)
         } else {
             @Suppress("DEPRECATION")
             window.addFlags(
                 WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
                     WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
-                    WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD,
+                    (if (alarm.isNormal) 0 else WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD),
             )
         }
     }
 
-    @Suppress("DEPRECATION")
-    private fun hideSystemBars() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            window.setDecorFitsSystemWindows(false)
-            window.insetsController?.apply {
-                hide(WindowInsets.Type.systemBars())
-                systemBarsBehavior =
-                    WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            }
-        } else {
-            window.decorView.systemUiVisibility =
-                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
-                View.SYSTEM_UI_FLAG_FULLSCREEN or
-                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
-                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
-                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-        }
-    }
+    private fun applySystemBars() = appearance.applySystemBars(this)
 
     private fun buildScreen(): View {
         val screenWidth = resources.displayMetrics.widthPixels
@@ -375,6 +416,19 @@ class AlarmRingActivity : Activity(), SensorEventListener {
             alarm.snoozeMinutes > 0 && snoozeCount < alarm.maxSnoozes
         ) View.VISIBLE else View.GONE
         challengeContainer.removeAllViews()
+        if (alarm.isNormal) {
+            challengeContainer.addView(textView("آلارم معمولی", 20f, colorText, Typeface.BOLD).apply {
+                gravity = Gravity.CENTER
+            }, linearParams())
+            challengeContainer.addView(textView("می‌تونی صدا رو کم کنی یا از این صفحه بیرون بری.",
+                15f, colorMuted, Typeface.NORMAL).apply { gravity = Gravity.CENTER }, linearParams(top = 12))
+            challengeContainer.addView(primaryButton().apply {
+                text = "قطع آلارم"
+                textSize = 20f
+                setOnClickListener { dismissNormalAlarm() }
+            }, linearParams(top = 20))
+            return
+        }
         challengeContainer.addView(primaryButton().apply {
             text = "شروع مأموریت"
             textSize = 20f
@@ -384,6 +438,7 @@ class AlarmRingActivity : Activity(), SensorEventListener {
     }
 
     private fun beginChallenges() {
+        if (alarm.isNormal) return
         resetChallengeProgress()
         ringPhase = phaseChallenge
         snoozeCard.visibility = View.GONE
@@ -392,6 +447,7 @@ class AlarmRingActivity : Activity(), SensorEventListener {
     }
 
     private fun showCurrentChallenge(resumeDeadline: Boolean = false) {
+        if (alarm.isNormal) return
         memoryToken += 1
         sensorManager.unregisterListener(this)
         handler.removeCallbacks(challengeCountdown)
@@ -903,6 +959,11 @@ class AlarmRingActivity : Activity(), SensorEventListener {
     }
 
     private fun snooze() {
+        if (alarm.isNormal && !RingingService.isNormalSessionActive(alarm.id, sessionToken)) {
+            endingAlarm = true
+            finish()
+            return
+        }
         if (!AlarmScheduler.scheduleSnooze(this, alarm, snoozeCount + 1)) {
             Toast.makeText(this, "Exact alarm access is required for snooze.", Toast.LENGTH_LONG)
                 .show()
@@ -912,11 +973,22 @@ class AlarmRingActivity : Activity(), SensorEventListener {
         RingStateStore.clear(this, alarm.id)
         WakeCheckScheduler.cancel(this, alarm.id)
         endingAlarm = true
-        RingingService.stop(this)
-        finishAndRemoveTask()
+        if (alarm.isNormal) RingingService.dismissNormal(alarm.id, sessionToken) else RingingService.stop(this)
+        finish()
+    }
+
+    private fun dismissNormalAlarm() {
+        if (!alarm.isNormal) return
+        endingAlarm = true
+        RingingService.dismissNormal(alarm.id, sessionToken)
+        finish()
     }
 
     private fun completeAlarm() {
+        if (alarm.isNormal) {
+            dismissNormalAlarm()
+            return
+        }
         AlarmScheduler.cancelChallengeTimeout(this, alarm.id)
         RingStateStore.clear(this, alarm.id)
         if (WakeFailureStore.consume(this, alarm.id)) {
@@ -926,7 +998,7 @@ class AlarmRingActivity : Activity(), SensorEventListener {
         }
         endingAlarm = true
         RingingService.stop(this)
-        finishAndRemoveTask()
+        finish()
     }
 
     private fun restoreState(savedInstanceState: Bundle?) {
@@ -968,7 +1040,7 @@ class AlarmRingActivity : Activity(), SensorEventListener {
     }
 
     private fun persistState() {
-        if (!::alarm.isInitialized || isFinishing) return
+        if (!::alarm.isInitialized || alarm.isNormal || isFinishing) return
         RingStateStore.save(this, alarm.id, createStateJson())
     }
 
@@ -1064,13 +1136,15 @@ class AlarmRingActivity : Activity(), SensorEventListener {
         private const val phaseRinging = "ringing"
         private const val phaseChallenge = "challenge"
 
-        fun createIntent(context: Context, alarm: AlarmData, snoozeCount: Int): Intent =
+        fun createIntent(context: Context, alarm: AlarmData, snoozeCount: Int, sessionToken: String = ""): Intent =
             Intent(context, AlarmRingActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or
                     Intent.FLAG_ACTIVITY_CLEAR_TOP or
                     Intent.FLAG_ACTIVITY_SINGLE_TOP
+                data = Uri.Builder().scheme("alarmxv").authority("ring").appendPath(alarm.id).build()
                 putExtra(extraAlarmJson, alarm.toJson().toString())
                 putExtra(extraSnoozeCount, snoozeCount)
+                putExtra(RingingService.extraSessionToken, sessionToken)
             }
     }
 }

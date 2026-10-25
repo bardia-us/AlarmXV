@@ -63,7 +63,7 @@ data class MissionSettings(
 /** Editing schedules must not cancel an in-flight snooze or silent mission timer. */
 object AlarmSyncPolicy {
     fun cancelSession(previous: AlarmData, updated: AlarmData?): Boolean =
-        previous.enabled && (updated == null || !updated.enabled)
+        previous.enabled && (updated == null || !updated.enabled || previous.mode != updated.mode)
 
     private val unavailablePermissions = mapOf<String, Any>(
         "exactAlarm" to false, "notifications" to false, "fullScreen" to false, "overlay" to false,

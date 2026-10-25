@@ -23,7 +23,12 @@ data class AlarmData(
     val wakeCheckCount: Int,
     val groupId: String? = null,
     val missionSettings: MissionSettings = MissionSettings(),
+    val mode: String = "challenge",
+    val volumeMode: String = "system",
+    val volumePercent: Int = 70,
 ) {
+    val isNormal: Boolean get() = mode == "normal"
+
     fun toJson(): JSONObject = JSONObject().apply {
         put("id", id)
         put("label", label)
@@ -39,6 +44,9 @@ data class AlarmData(
         put("alarmSoundName", alarmSoundName)
         put("groupId", groupId ?: JSONObject.NULL)
         put("missionSettings", missionSettings.toJson())
+        put("mode", mode)
+        put("volumeMode", volumeMode)
+        put("volumePercent", volumePercent)
         put("wakeCheck", JSONObject().apply {
             put("enabled", wakeCheckEnabled)
             put("delayMinutes", wakeCheckDelayMinutes)
@@ -49,6 +57,7 @@ data class AlarmData(
 
     companion object {
         fun fromJson(json: JSONObject): AlarmData {
+            val mode = json.optString("mode", "challenge").takeIf { it == "normal" } ?: "challenge"
             val days = json.optJSONArray("weekdays") ?: JSONArray()
             val challengesJson = json.optJSONArray("challenges")
             val challenges = mutableSetOf<String>()
@@ -60,7 +69,7 @@ data class AlarmData(
                 challenges.add(json.optString("challenge", "math"))
             }
             challenges.retainAll(setOf("math", "memory", "shake", "typing", "order"))
-            if (challenges.isEmpty()) challenges.add("math")
+            if (challenges.isEmpty() && mode != "normal") challenges.add("math")
             val wakeCheck = json.optJSONObject("wakeCheck") ?: JSONObject()
 
             return AlarmData(
@@ -89,6 +98,9 @@ data class AlarmData(
                 wakeCheckCount = wakeCheck.optInt("checkCount", 1).coerceIn(1, 5),
                 groupId = json.optString("groupId", "").takeIf { it.isNotBlank() && it != "null" },
                 missionSettings = MissionSettings.fromJson(json.optJSONObject("missionSettings")),
+                mode = mode,
+                volumeMode = json.optString("volumeMode", "system").takeIf { it == "custom" } ?: "system",
+                volumePercent = json.optInt("volumePercent", 70).coerceIn(0, 100),
             )
         }
 

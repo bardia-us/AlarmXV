@@ -7,6 +7,7 @@ import 'package:alarm_xv/models/alarm_group.dart';
 import 'package:alarm_xv/models/app_settings.dart';
 import 'package:alarm_xv/theme/clay_theme.dart';
 import 'package:alarm_xv/widgets/alarm_editor_sheet.dart';
+import 'package:alarm_xv/widgets/clay_components.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -224,8 +225,12 @@ void main() {
       );
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
-      await tester.ensureVisible(find.text('بدون گروه'));
-      await tester.tap(find.text('بدون گروه'));
+      final groupSelector = find.byWidgetPredicate(
+        (widget) =>
+            widget is ClaySelectionTile<String> && widget.label == 'گروه زنگ',
+      );
+      await tester.ensureVisible(groupSelector);
+      await tester.tap(groupSelector);
       await tester.pumpAndSettle();
       await tester.tap(find.text('مطالعه').last);
       await tester.pumpAndSettle();
@@ -255,11 +260,13 @@ void main() {
   testWidgets('theme and accent selection persist through native settings', (
     tester,
   ) async {
+    tester.platformDispatcher.platformBrightnessTestValue = Brightness.light;
+    addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
     await tester.pumpWidget(const AlarmXvApp());
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('تنظیمات'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('تیره'));
+    await tester.tap(find.byTooltip('رفتن به حالت تیره'));
     await tester.pumpAndSettle();
     expect(settings['themeMode'], 'dark');
     expect(
@@ -270,6 +277,18 @@ void main() {
     await tester.tap(find.text('مرجانی'));
     await tester.pumpAndSettle();
     expect(settings['accent'], 'coral');
+    final automaticTheme = find.widgetWithText(
+      SwitchListTile,
+      'هماهنگ با سیستم',
+    );
+    await tester.ensureVisible(automaticTheme);
+    await tester.tap(automaticTheme);
+    await tester.pumpAndSettle();
+    expect(settings['themeMode'], 'system');
+    expect(
+      tester.widget<MaterialApp>(find.byType(MaterialApp)).themeMode,
+      ThemeMode.system,
+    );
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });
@@ -285,8 +304,8 @@ void main() {
     alarms.single['groupId'] = 'work';
     await tester.pumpWidget(const AlarmXvApp());
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('گروه‌ها'));
-    await tester.tap(find.text('گروه‌ها'));
+    await tester.ensureVisible(find.widgetWithText(ActionChip, 'گروه‌ها'));
+    await tester.tap(find.widgetWithText(ActionChip, 'گروه‌ها'));
     await tester.pumpAndSettle();
     failSettingsSave = true;
     await tester.tap(find.byTooltip('گزینه‌های گروه کار'));
@@ -312,8 +331,8 @@ void main() {
     alarms.single['groupId'] = 'work';
     await tester.pumpWidget(const AlarmXvApp());
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('گروه‌ها'));
-    await tester.tap(find.text('گروه‌ها'));
+    await tester.ensureVisible(find.widgetWithText(ActionChip, 'گروه‌ها'));
+    await tester.tap(find.widgetWithText(ActionChip, 'گروه‌ها'));
     await tester.pumpAndSettle();
     await tester.tap(find.byType(Switch).last);
     await tester.pumpAndSettle();

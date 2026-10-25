@@ -19,6 +19,7 @@ class AlarmPermissionStatus {
   final bool overlay;
 
   bool get allGranted => exactAlarm && notifications && fullScreen && overlay;
+  bool get normalGranted => exactAlarm && notifications;
 
   factory AlarmPermissionStatus.fromMap(Map<Object?, Object?> map) {
     return AlarmPermissionStatus(

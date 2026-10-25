@@ -13,7 +13,6 @@ import android.os.Looper
 import android.view.Gravity
 import android.view.View
 import android.view.WindowInsets
-import android.view.WindowInsetsController
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.FrameLayout
@@ -51,13 +50,22 @@ class WakeCheckActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         appearance = NativeAppearance(this)
+        configureWindow()
+        showCheckIntent(intent)
+    }
+
+    private fun showCheckIntent(intent: Intent) {
+        handler.removeCallbacks(ticker)
         alarmId = intent.getStringExtra(extraAlarmId) ?: run {
+            finish()
+            return
+        }
+        if (AlarmStore.find(this, alarmId)?.isNormal == true) {
             finish()
             return
         }
         checkNumber = intent.getIntExtra(extraCheckNumber, 1)
         deadline = intent.getLongExtra(extraDeadline, 0L)
-        configureWindow()
         setContentView(buildScreen(intent.getStringExtra(extraAlarmLabel).orEmpty()))
         handler.post(ticker)
     }
@@ -65,17 +73,17 @@ class WakeCheckActivity : Activity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        recreate()
+        showCheckIntent(intent)
     }
 
     override fun onResume() {
         super.onResume()
-        hideSystemBars()
+        applySystemBars()
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
-        if (hasFocus) hideSystemBars()
+        if (hasFocus) applySystemBars()
     }
 
     override fun onDestroy() {
@@ -85,7 +93,7 @@ class WakeCheckActivity : Activity() {
 
     private fun confirmAwake() {
         WakeCheckScheduler.confirm(this, alarmId, checkNumber)
-        finishAndRemoveTask()
+        finish()
     }
 
     private fun configureWindow() {
@@ -104,23 +112,7 @@ class WakeCheckActivity : Activity() {
         }
     }
 
-    @Suppress("DEPRECATION")
-    private fun hideSystemBars() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            window.setDecorFitsSystemWindows(false)
-            window.insetsController?.apply {
-                hide(WindowInsets.Type.systemBars())
-                systemBarsBehavior =
-                    WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            }
-        } else {
-            window.decorView.systemUiVisibility =
-                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
-                View.SYSTEM_UI_FLAG_FULLSCREEN or
-                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-        }
-    }
+    private fun applySystemBars() = appearance.applySystemBars(this)
 
     private fun buildScreen(label: String): View {
         val content = LinearLayout(this).apply {
@@ -190,7 +182,7 @@ class WakeCheckActivity : Activity() {
             background = appearance.ripple(this@WakeCheckActivity, appearance.accentSurface, 20)
             minHeight = dp(48)
             setPadding(dp(14), dp(12), dp(14), dp(12))
-            setOnClickListener { finishAndRemoveTask() }
+            setOnClickListener { finish() }
         }, linearParams(top = 8))
 
         val frame = FrameLayout(this).apply {

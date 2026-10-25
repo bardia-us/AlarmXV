@@ -55,7 +55,7 @@ object WakeCheckScheduler {
     fun startCycle(context: Context, alarm: AlarmData) {
         cancel(context, alarm.id)
         WakeFailureStore.clear(context, alarm.id)
-        if (!alarm.wakeCheckEnabled || !alarm.enabled) return
+        if (alarm.isNormal || !alarm.wakeCheckEnabled || !alarm.enabled) return
         scheduleCheck(
             context,
             alarm,
@@ -68,7 +68,7 @@ object WakeCheckScheduler {
         val pendingState = WakeCheckStore.get(context, alarmId)
         if (pendingState?.phase != phaseWaiting || pendingState.checkNumber != checkNumber) return
         val alarm = AlarmStore.find(context, alarmId)
-        if (alarm == null || !alarm.enabled || !alarm.wakeCheckEnabled) {
+        if (alarm == null || alarm.isNormal || !alarm.enabled || !alarm.wakeCheckEnabled) {
             cancel(context, alarmId)
             return
         }
@@ -96,7 +96,7 @@ object WakeCheckScheduler {
         AlarmScheduler.cancelWakeFailure(context, alarmId)
         notificationManager(context).cancel(notificationId(alarmId))
         val alarm = AlarmStore.find(context, alarmId)
-        if (alarm == null || !alarm.enabled || !alarm.wakeCheckEnabled ||
+        if (alarm == null || alarm.isNormal || !alarm.enabled || !alarm.wakeCheckEnabled ||
             checkNumber >= alarm.wakeCheckCount
         ) {
             WakeCheckStore.remove(context, alarmId)
@@ -129,7 +129,7 @@ object WakeCheckScheduler {
         val now = System.currentTimeMillis()
         WakeCheckStore.all(context).forEach { state ->
             val alarm = AlarmStore.find(context, state.alarmId)
-            if (alarm == null || !alarm.enabled || !alarm.wakeCheckEnabled) {
+            if (alarm == null || alarm.isNormal || !alarm.enabled || !alarm.wakeCheckEnabled) {
                 cancel(context, state.alarmId)
                 return@forEach
             }

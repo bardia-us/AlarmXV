@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import '../theme/clay_theme.dart';
 
 bool reduceMotion(BuildContext context) =>
@@ -26,28 +27,52 @@ class ClaySurface extends StatelessWidget {
   Widget build(BuildContext context) {
     final tokens = ClayTokens.of(context);
     final shape = BorderRadius.circular(radius);
+    final content = onTap == null
+        ? Padding(padding: padding, child: child)
+        : InkWell(
+            borderRadius: shape,
+            onTap: () {
+              if (!reduceMotion(context)) HapticFeedback.selectionClick();
+              onTap!();
+            },
+            child: Padding(padding: padding, child: child),
+          );
+    final base = color ?? tokens.surface;
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: shape,
         boxShadow: elevated ? tokens.depth : null,
       ),
       child: Material(
-        color: color ?? tokens.surface,
+        color: base,
         shape: RoundedRectangleBorder(
           borderRadius: shape,
           side: BorderSide(color: tokens.border.withValues(alpha: .7)),
         ),
         clipBehavior: Clip.antiAlias,
-        child: onTap == null
-            ? Padding(padding: padding, child: child)
-            : InkWell(
-                borderRadius: shape,
-                onTap: () {
-                  if (!reduceMotion(context)) HapticFeedback.selectionClick();
-                  onTap!();
-                },
-                child: Padding(padding: padding, child: child),
-              ),
+        child: tokens.isDark && elevated
+            ? Ink(
+                decoration: BoxDecoration(
+                  borderRadius: shape,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color.alphaBlend(
+                        Colors.white.withValues(alpha: .055),
+                        base,
+                      ),
+                      base,
+                      Color.alphaBlend(
+                        Colors.black.withValues(alpha: .06),
+                        base,
+                      ),
+                    ],
+                  ),
+                ),
+                child: content,
+              )
+            : content,
       ),
     );
   }
@@ -95,9 +120,8 @@ class SectionHeading extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                style: Theme.of(context).textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w800),
               ),
               if (subtitle != null) ...[
                 const SizedBox(height: 5),
@@ -142,10 +166,8 @@ class StatusPill extends StatelessWidget {
           Flexible(
             child: Text(
               label,
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: tint,
-                fontWeight: FontWeight.w700,
-              ),
+              style: Theme.of(context).textTheme.labelMedium
+                  ?.copyWith(color: tint, fontWeight: FontWeight.w700),
             ),
           ),
         ],
@@ -214,6 +236,245 @@ class NumberControl extends StatelessWidget {
       },
     ),
   );
+}
+
+/// A floating action edge. Place above scroll content in a Stack and reserve
+/// equivalent bottom scroll padding; there is no opaque footer strip.
+class ClayActionFooter extends StatelessWidget {
+  const ClayActionFooter({super.key, required this.child});
+  final Widget child;
+  @override
+  Widget build(BuildContext context) {
+    final tokens = ClayTokens.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          stops: const [0, .48, 1],
+          colors: [
+            tokens.canvas.withValues(alpha: 0),
+            tokens.canvas.withValues(alpha: .88),
+            tokens.canvas.withValues(alpha: .98),
+          ],
+        ),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Center(
+          heightFactor: 1,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 760),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(22, 28, 22, 14),
+              child: SizedBox(
+                width: double.infinity,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(ClayTokens.smallRadius),
+                    boxShadow: tokens.depth,
+                  ),
+                  child: child,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class ClaySelectionOption<T> {
+  const ClaySelectionOption({
+    required this.value,
+    required this.label,
+    this.icon,
+    this.description,
+  });
+  final T value;
+  final String label;
+  final IconData? icon;
+  final String? description;
+}
+
+/// Selection uses the app's rounded sheet and clipped surfaces, including RTL
+/// and large text, instead of the platform dropdown route.
+class ClaySelectionTile<T> extends StatelessWidget {
+  const ClaySelectionTile({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.options,
+    required this.onChanged,
+  });
+  final String label;
+  final T value;
+  final List<ClaySelectionOption<T>> options;
+  final ValueChanged<T>? onChanged;
+
+  Future<void> _choose(BuildContext context) async {
+    FocusManager.instance.primaryFocus?.unfocus();
+    final selected = await showModalBottomSheet<T>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (context) => ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(context).height * .76,
+        ),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 38,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 16, 12, 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        label,
+                        style: Theme.of(context).textTheme.titleLarge
+                            ?.copyWith(fontWeight: FontWeight.w800),
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'بستن انتخاب',
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close_rounded),
+                    ),
+                  ],
+                ),
+              ),
+              Flexible(
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.fromLTRB(22, 4, 22, 24),
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: options.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final option = options[index];
+                    final active = option.value == value;
+                    final scheme = Theme.of(context).colorScheme;
+                    return Semantics(
+                      selected: active,
+                      button: true,
+                      child: ClaySurface(
+                        elevated: active,
+                        radius: 22,
+                        color: active
+                            ? Color.alphaBlend(
+                                scheme.primary.withValues(alpha: .12),
+                                ClayTokens.of(context).surface,
+                              )
+                            : null,
+                        onTap: () => Navigator.pop(context, option.value),
+                        padding: const EdgeInsets.all(18),
+                        child: Row(
+                          children: [
+                            if (option.icon != null) ...[
+                              Icon(option.icon, color: scheme.primary),
+                              const SizedBox(width: 14),
+                            ],
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    option.label,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleSmall,
+                                  ),
+                                  if (option.description != null) ...[
+                                    const SizedBox(height: 5),
+                                    Text(
+                                      option.description!,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            color: scheme.onSurfaceVariant,
+                                          ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Icon(
+                              active
+                                  ? Icons.check_circle_rounded
+                                  : Icons.radio_button_unchecked_rounded,
+                              color: active ? scheme.primary : scheme.outline,
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (selected != null && context.mounted) onChanged?.call(selected);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final selected = options
+        .where((option) => option.value == value)
+        .firstOrNull;
+    final scheme = Theme.of(context).colorScheme;
+    return ClaySurface(
+      radius: ClayTokens.smallRadius,
+      elevated: false,
+      color: ClayTokens.of(context).inset,
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      onTap: onChanged == null ? null : () => _choose(context),
+      child: Row(
+        children: [
+          if (selected?.icon != null) ...[
+            Icon(selected!.icon, color: scheme.primary),
+            const SizedBox(width: 14),
+          ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: scheme.onSurfaceVariant),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  selected?.label ?? '',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Icon(Icons.unfold_more_rounded, color: scheme.onSurfaceVariant),
+        ],
+      ),
+    );
+  }
 }
 
 Future<bool> confirmAction(

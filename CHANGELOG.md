@@ -1,6 +1,24 @@
 # Changelog
 
-## 2.0.0-preview.1+4 — Private preview / پیش‌نمایش خصوصی
+## 2.0.0-preview.2+5005 — Private preview / پیش‌نمایش خصوصی
+
+### فارسی
+- حالت جداگانهٔ زنگ عادی: قطع مستقیم، بدون مأموریت و بررسی اجباری بیداری، بلندی فعلی گوشی یا درصد دلخواه و امکان تغییر صدا با دکمه‌ها.
+- یکپارچه‌کردن Task و مسیرهای نمایش Native برای جلوگیری از ساخت چند پنجرهٔ آلارم.
+- عمق واضح‌تر Clay در تم تیره، انتخابگرهای گرد و هماهنگ، نوارهای پایین با محوشدن شفاف و ناوبری edge-to-edge.
+- دکمهٔ متحرک ماه/خورشید با پیش‌فرض سیستم و گذار تغییر گروه حتی برای فهرست‌های یکسان؛ حفظ دسترسی به نوار ناوبری و حریم امن دکمه‌ها.
+- ارتقای SDK مشترک با نیرا به Flutter3.47.8 stable / Dart3.13.7.
+- طبق درخواست مالک، تست تازه و نصب روی گوشی برای این تغییرات انجام نشده؛ نتیجهٔ کامپایل و APKها جدا گزارش می‌شود.
+
+### English
+- Separate normal alarm mode with direct dismissal, optional custom or system volume, free volume keys, and no mandatory missions or wake checks.
+- Unified Android task affinity and native launch identity to avoid duplicate alarm windows.
+- Stronger dark Clay depth, rounded selection surfaces and translucent fading action footers with edge-to-edge navigation.
+- Animated moon/sun control with system default; explicit group transitions even for identical contents; visible system navigation and safe action insets.
+- Shared SDK upgraded to Flutter3.47.8 stable / Dart3.13.7.
+- No new tests or device installation at the owner's request; compiler/APK results are reported separately.
+
+## 2.0.0-preview.1+5004 — Private preview / پیش‌نمایش خصوصی
 
 ### فارسی
 - طراحی یکپارچه Clay، تم روشن/تیره/سیستم و هشت پالت رنگ ذخیره‌شونده.
@@ -10,6 +28,7 @@
 - نمایش تازه‌های نسخه بعد از نصب آپدیت و بررسی دستی GitHub با پیشنهاد معماری مناسب.
 - اصلاح لغو اشتباه Snooze و مهلت مأموریت هنگام بازگشت به اپ؛ حفظ سازگاری داده‌های 1.2.
 - وضعیت تست واقعی و محدودیت‌ها در docs/qa/STATUS.md ثبت شده؛ این نسخه هنوز عمومی نشده است.
+- مجوز GPL-3.0؛ کد5004 مشترک بین APKها برای آپدیت بدون حذف داده.
 
 ### English
 - Unified soft-depth Clay UI, persistent system/light/dark themes and eight accents.
@@ -19,6 +38,7 @@
 - Version-specific in-app What's New and manual GitHub updates with ABI-aware downloads.
 - Preserve pending snoozes and mission deadlines when returning to the app; additive v1.2 migration.
 - Actual QA evidence and device limitations are tracked in docs/qa/STATUS.md. Not publicly released.
+- GPL-3.0 license and shared APK version code5004 for non-destructive upgrades.
 
 ## 1.2.0+3
 

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+
 import '../models/app_settings.dart';
 import '../theme/clay_theme.dart';
 import '../theme/settings_controller.dart';
 import '../widgets/app_info_section.dart';
 import '../widgets/clay_components.dart';
+import '../widgets/theme_toggle_button.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key, required this.controller});
@@ -42,37 +44,58 @@ class SettingsScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'حالت نمایش',
-                          style: TextStyle(fontWeight: FontWeight.w700),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'حالت نمایش',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? 'آرامش شب، با عمق نرم'
+                                        : 'روشن و سبک، مثل صبح',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            ClayThemeToggle(controller: controller),
+                          ],
                         ),
                         const SizedBox(height: 12),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            for (final mode in ThemeMode.values)
-                              ChoiceChip(
-                                avatar: Icon(switch (mode) {
-                                  ThemeMode.system =>
-                                    Icons.brightness_auto_rounded,
-                                  ThemeMode.light => Icons.light_mode_outlined,
-                                  ThemeMode.dark => Icons.dark_mode_outlined,
-                                }, size: 18),
-                                label: Text(switch (mode) {
-                                  ThemeMode.system => 'همراه سیستم',
-                                  ThemeMode.light => 'روشن',
-                                  ThemeMode.dark => 'تیره',
-                                }),
-                                selected: settings.themeMode == mode,
-                                onSelected: controller.isSaving
-                                    ? null
-                                    : (_) => _update(
-                                        context,
-                                        settings.copyWith(themeMode: mode),
-                                      ),
-                              ),
-                          ],
+                        SwitchListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: const Text('هماهنگ با سیستم'),
+                          subtitle: Text(
+                            settings.themeMode == ThemeMode.system
+                                ? 'حالت روشن و تیره با گوشی تغییر می‌کنه.'
+                                : 'انتخاب دستی فعاله؛ با دکمهٔ ماه و خورشید عوضش کن.',
+                          ),
+                          value: settings.themeMode == ThemeMode.system,
+                          onChanged: controller.isSaving
+                              ? null
+                              : (enabled) => _update(
+                                  context,
+                                  settings.copyWith(
+                                    themeMode: enabled
+                                        ? ThemeMode.system
+                                        : Theme.of(context).brightness ==
+                                              Brightness.dark
+                                        ? ThemeMode.dark
+                                        : ThemeMode.light,
+                                  ),
+                                ),
                         ),
                         const SizedBox(height: 22),
                         const Text(

@@ -2,6 +2,8 @@ import '../challenges/challenge_type.dart';
 import 'wake_check_settings.dart';
 import 'mission_settings.dart';
 
+enum AlarmMode { challenge, normal }
+
 class Alarm {
   const Alarm({
     required this.id,
@@ -19,6 +21,9 @@ class Alarm {
     this.wakeCheck = const WakeCheckSettings(),
     this.groupId,
     this.missionSettings = const MissionSettings(),
+    this.mode = AlarmMode.challenge,
+    this.volumeMode = 'system',
+    this.volumePercent = 70,
   });
 
   final String id;
@@ -36,6 +41,9 @@ class Alarm {
   final WakeCheckSettings wakeCheck;
   final String? groupId;
   final MissionSettings missionSettings;
+  final AlarmMode mode;
+  final String volumeMode;
+  final int volumePercent;
 
   /// Display-only counterpart to native AlarmManager scheduling.
   DateTime? nextOccurrence(DateTime after) {
@@ -71,6 +79,9 @@ class Alarm {
     String? groupId,
     bool clearGroup = false,
     MissionSettings? missionSettings,
+    AlarmMode? mode,
+    String? volumeMode,
+    int? volumePercent,
   }) {
     return Alarm(
       id: id ?? this.id,
@@ -89,6 +100,9 @@ class Alarm {
       wakeCheck: wakeCheck ?? this.wakeCheck,
       groupId: clearGroup ? null : groupId ?? this.groupId,
       missionSettings: missionSettings ?? this.missionSettings,
+      mode: mode ?? this.mode,
+      volumeMode: volumeMode ?? this.volumeMode,
+      volumePercent: (volumePercent ?? this.volumePercent).clamp(0, 100),
     );
   }
 
@@ -109,6 +123,9 @@ class Alarm {
       'wakeCheck': wakeCheck.toJson(),
       'groupId': groupId ?? '',
       'missionSettings': missionSettings.toJson(),
+      'mode': mode.name,
+      'volumeMode': volumeMode,
+      'volumePercent': volumePercent.clamp(0, 100),
     };
   }
 
@@ -136,7 +153,9 @@ class Alarm {
       minute: json['minute'] as int,
       weekdays: (json['weekdays'] as List<dynamic>).cast<int>().toSet(),
       isEnabled: json['isEnabled'] as bool,
-      challenges: challenges.isEmpty ? {ChallengeType.math} : challenges,
+      challenges: challenges.isEmpty && json['mode'] != 'normal'
+          ? {ChallengeType.math}
+          : challenges,
       snoozeMinutes: json['snoozeMinutes'] as int? ?? 5,
       maxSnoozes: json['maxSnoozes'] as int? ?? 3,
       preventVolumeReduction: json['preventVolumeReduction'] as bool? ?? true,
@@ -153,6 +172,12 @@ class Alarm {
           : null,
       missionSettings: MissionSettings.fromJson(
         json['missionSettings'] as Map<String, dynamic>?,
+      ),
+      mode: json['mode'] == 'normal' ? AlarmMode.normal : AlarmMode.challenge,
+      volumeMode: json['volumeMode'] == 'custom' ? 'custom' : 'system',
+      volumePercent: ((json['volumePercent'] as num?)?.toInt() ?? 70).clamp(
+        0,
+        100,
       ),
     );
   }

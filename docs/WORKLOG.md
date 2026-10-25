@@ -26,3 +26,48 @@
 - App WhatsNew once-per-installed-version test passed. GitHub updater tests reject wrong repo/encoded path escapes, compare prerelease correctly and match ABI with universal fallback.
 - Flutter3.47.8 upgrade could not finish: Google connection reset; official mirror transferred57MB then stalled on resumed chunks. Original working3.47.6 SDK restored from existing backup, stable branch restored, incomplete download and backups preserved. No claim upgrade succeeded.
 - Source review (Codex Security) completed with partial coverage, zero validated findings in reviewed controls; original snapshot unavailable warning makes it unsuitable as final-release certification.
+
+## Checkpoint3 — real device available
+
+- User selected GPL-3.0. Canonical license added and bundled; app license viewer registered.
+- User connected Galaxy A34 SM-A346E, Android16, display120Hz; serial used for targeted ADB only. Existing installed v1.2.0 has versionCode2003.
+- New preview versionCode5004 (above all1.2 split codes); Flutter's supported force-version-code-ignoring-abi property keeps ARMv7/ARM64/universal mutually upgradeable. Profile signed with existing release key to preserve installed app data.
+- Commit05b103e records integrated redesign checkpoint.
+- Whole Flutter suite27passed+1opt-in visual skipped; separate visual capture passed; native11passed. Fresh reviewer Important1 postpersist sync errors and Important2 legacy memory/shake defaults fixed with RED/GREEN tests.
+- Current native/UI widgets ready; Profile build network artifact403 on Google, retry via official mirror ongoing. No physical test result yet.
+- Pending: Profile install, capture baseline alarms before/after, device alarm/mission/checker+FPS evidence, final Release outputs, public docs update (not GitHub Release).
+
+## Checkpoint4 — owner ended testing
+
+- ProfileAPK built and installed as update successfully; old/new signerSHA256 both4f15672645bdf1ca9a382ee715ff3fd4ae124ea9cd56c744a1178253c45c5cd6, IDunchanged, code5004. No uninstall/data clearing.
+- Device screenshot before upgrade: one active08:50 alarm; actual pending AlarmManager record present. New What'sNew screen rendered. Full post-upgrade alarm inventory not independently checked before owner ended tests.
+- One measured Profile6 scrolling window977frames UI P95/P99 3.595/4.452ms, raster6.003/7.471ms,6framesover8.33ms. Original label home-scroll-warm was wrong: screenshot shows new-alarm editor; report attribution corrected. No120FPS constant claim.
+- User explicitly: 'بقیه چیزاش با من. دیگه تستی نمیخواد'. STOP all further automated/device tests and interaction; finish pending SDK/build/docs only. Removed own adb8181forward. Do not install final APK unless user later requests.
+- Owner-provided local VPN supports SOCKS5 and HTTP proxy. Command scoped only; no proxy configuration committed. Google403 persists but mirror downloads now work. CanonicalSDK8 Dart3.13.7 archive and nextengine profile artifact verified.
+- SDK8 sourceHEAD737ba8f885dc774b53b442759999a312c9461e4e; DartSDK3.13.7 installed. Old Flutter tool metadata still6; rebuilding tool stalled pub.dev403, use cached offline Flutter-tools pub resolution or official pub mirror. Preserve backupD:/dev/flutter/bin/cache/dart-sdk.backup-alarmxv-3.47.6.
+- Final remaining: make SDK3.47.8 self-consistent, build signedRelease v7a/v8a/universal only, checksums/identity/signature; bilingual publicREADME+LICENSE+changelog; source checkpoint/reviewbranch; no GitHubRelease.
+
+## Checkpoint5 — 2026-10-25 normal-mode and surface revision
+
+- User returned after usage limit; reported duplicate Android windows, opaque save/footer bands, square dark group menus; requested genuinely permissive normal alarm separate from strict mission mode. Light Clay screenshot is the visual reference; dark depth must improve without blur.
+- New contract: AlarmMode challenge/normal, JSON mode(defaultchallenge), volumeMode system/custom(defaultsystem), volumePercent0..100(default70). Old alarms remain strict. Normal ignores stored mission/checker configuration without deleting it.
+- Native task evidence: launcher affinity empty vs package affinity for Ring/Wake, singleTop and inconsistent notification/relaunch intents. Fix coherent task identity and finish native Activity without removing shared launcher task.
+- Root main now uses edgeToEdge + transparent navigation annotations with contrast scrim disabled. UI agent owns rounded shared choice sheets and fading footer overlays; native agent owns modes/audio/dismiss/affinity.
+- SDK tool bootstrap COMPLETED via official pub mirror + command-only VPN: Flutter3.47.8 stable, HEAD737ba8f885dc774b53b442759999a312c9461e4e, enginecf636b1d, Dart3.13.7. No permanent proxy or app credentials saved. Project/CI SDK floor now3.47.8/3.13.7.
+- Preview2.0.0-preview.2+5005; app What'sNew/changelog updated. User's stop-tests instruction retained: no new tests/ADB/device installation; final static review/compiler builds only.
+
+## Checkpoint6 — latest navigation/theme requirements
+
+- User requested an animated moon/sun header control instead of three theme buttons; keep system-following as default and expose a clear return to automatic.
+- Native and Flutter system navigation must remain VISIBLE (Home/Recents/Back), transparent and inset-safe. This supersedes the earlier immersive/hide-navigation design, while strict mission behavior remains distinct from normal mode.
+- Filter transitions must trigger on selected-group change even if IDs/content match All; keep lazy list and reduced-motion support.
+- Normal alarm permission readiness needs exact alarms+notifications, not display-over-apps. Mode transition cancels obsolete strict sessions and all checker entrypoints skip normal. Explicit empty normal missions survive JSON round-trip.
+- Source-only final review dispatched. No tests executed after stop request. SDK Android artifacts are being prefetched with command-scoped VPN for final release builds.
+
+## Checkpoint7 — final static review and install concern
+
+- Moon/sun action, system sync return and identical-content group transition complete; reduced motion includes accessibleNavigation. Existing UI test selectors maintained without execution; old baseline pass counts are not claimed for preview2.
+- Fresh read-only review found no new Important/Critical issue. Known limitations: singleton active-alarm engine; OEM task/nav/volume behavior unverified on preview2.
+- User reported an apparent clone and asked for official Android research. No new install performed. Original installed profile used exactly com.alarmxv.alarm_xv with release signer matching1.2 and install-r; source has no applicationIdSuffix or second launcher. Awaiting whether observed duplication is Recents cards, launcher shortcuts or actual Settings packages; do not pretend runtime cause is proved.
+- Android references: https://developer.android.com/guide/components/activities/tasks-and-back-stack and https://developer.android.com/studio/publish/app-signing. Affinity/singleTask/canonical intents address task duplication; same ID+signer maintain update identity. No device query/uninstall/cleanup authorized or performed after stop request.
+- Final release compiler command running for ARMv7/ARM64 split outputs then universal; no tests or install in that command.
