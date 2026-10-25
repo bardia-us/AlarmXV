@@ -1,0 +1,26 @@
+{
+  "device": "Samsung Galaxy A34 SM-A346E",
+  "android": "16",
+  "buildMode": "profile",
+  "flutter": "3.47.6",
+  "scenario": "warm new-alarm editor scrolling",
+  "originalCaptureLabel": "home-scroll-warm",
+  "attributionCorrection": "Pre-capture screenshot shows the editor. Not a Home benchmark.",
+  "frames": 977,
+  "refreshHz": 120.00000762939453,
+  "budgetMs": 8.333332803514303,
+  "uiP95Ms": 3.595,
+  "uiP99Ms": 4.452,
+  "rasterP95Ms": 6.003,
+  "rasterP99Ms": 7.471,
+  "intervalP95Ms": 8.341,
+  "intervalP99Ms": 16.666,
+  "jankyFrames": 6,
+  "limitations": [
+    "Android GPU-watch overlay enabled",
+    "Vsync gaps include pauses between ADB gestures",
+    "Only this Flutter interaction measured; not native ringing",
+    "No further device tests after owner's stop request",
+    "Later SDK build not reprofiled"
+  ]
+}
