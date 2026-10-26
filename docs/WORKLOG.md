@@ -130,3 +130,11 @@
 - Refreshed bilingual homepage with current sample-only screenshots, direct architecture download table, features, GPL/license/privacy links and honest verification limits. Replaced stale1.2 RELEASE_NOTES.md with bilingual preview3 notes; no build instructions in the homepage.
 - Removed obsolete tag-push publisher: it uploaded tracked1.2 release-assets for every tag. Publication now uses GitHub CLI with explicit verified local dist/2.0.0-preview.3 assets, staged as a draft before publication. No signing material or real device screenshots included.
 - GitHub connector has no Release/asset publication capability; GitHub CLI authenticated to the same owned public repository is the fallback. Existing main=f10f82d; source backup branch=redesign/clay-v2. Final publication result is recorded after API verification.
+
+## Checkpoint15 — public pre-release verified, 2026-10-26
+
+- Published https://github.com/bardia-us/AlarmXV/releases/tag/v2.0.0-preview.3 (release424633388): draft=false, prerelease=true. Stable latest endpoint still returnsv1.2.0.
+- Tag source=c7cf8642f99c7800bb2f1a0136137255bd888322, with no lib/android/pubspec changes relative to the built/installed bca8b4f checkpoint. Main fast-forwarded fromf10f82d to the matching source/homepage. No history rewrite or tag replacement.
+- Exactly4assets uploaded: ARM64, ARMv7, universal and SHA256SUMS. GitHub server SHA256 digests and byte lengths matched all four local files before publication. Existing signing identity preserved.
+- Public README now includes current Persian/English sample screenshots, architecture download table, versioned links, privacy/GPL/contribution sections and the actual test limitations. Repo description and topics refreshed. Old1.2 Release and assets unchanged; obsolete tag publisher removed to prevent stale artifact uploads.
+- No additional tests/builds or phone interactions performed for publication. The user's install-only/they-test-device boundary remains in effect.
