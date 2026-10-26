@@ -1,97 +1,104 @@
 <div align="center">
 
+<img src="android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" width="88" alt="AlarmXV" />
+
 # AlarmXV
 
-### A better morning starts with actually waking up.
-### صبح خوب، با واقعاً بیدارشدن شروع می‌شود.
+### صبح از اینجا شروع می‌شه · Your morning starts here
 
-An Android alarm clock for heavy sleepers — local alarms, wake-up missions, and a little persistence.
+An open-source Android alarm clock with wake-up missions, Clay surfaces and Persian/English support.
 
-[Download / دانلود](https://github.com/bardia-us/AlarmXV/releases/latest) · [What’s new / تغییرات](CHANGELOG.md) · [Report a bug / گزارش مشکل](https://github.com/bardia-us/AlarmXV/issues)
+[**Download preview · دانلود پیش‌نمایش**](https://github.com/bardia-us/AlarmXV/releases/tag/v2.0.0-preview.3) · [Stable 1.2.0](https://github.com/bardia-us/AlarmXV/releases/latest) · [Changelog](CHANGELOG.md) · [Issues](https://github.com/bardia-us/AlarmXV/issues)
+
+**2.0.0-preview.3** · Flutter + Kotlin · Android · [GPL-3.0](LICENSE)
+
+<img src="docs/alarmxv-light.png" width="240" alt="Persian alarm list in light mode" />
+&nbsp;
+<img src="docs/alarmxv-dark.png" width="240" alt="English alarm list in dark mode" />
+
+<sub>Sample alarms · زنگ‌های نمونه؛ اطلاعات واقعی کاربران نیست</sub>
 
 </div>
 
-<div align="center">
-<img src="docs/alarmxv-light.png" width="230" alt="AlarmXV preview in light mode" />
-&nbsp;&nbsp;
-<img src="docs/alarmxv-dark.png" width="230" alt="AlarmXV preview in dark mode" />
-<p><sub>Design preview · نمونهٔ زبان طراحی؛ نسخهٔ جدید هنوز منتشر نشده</sub></p>
-</div>
+## دانلود · Download
 
----
+**2.0.0-preview.3** یک پیش‌انتشار عمومی است. نسخهٔ پایدار فعلی **1.2.0** باقی می‌ماند.
+
+**2.0.0-preview.3 is a public pre-release.** Version **1.2.0** remains the stable release.
+
+| APK | مناسب برای · Best for | Size |
+|---|---|---:|
+| [ARM64 · v8a](https://github.com/bardia-us/AlarmXV/releases/download/v2.0.0-preview.3/AlarmXV-2.0.0-preview.3-arm64-v8a.apk) | بیشتر گوشی‌های جدید · Most modern phones | 18.1 MiB |
+| [ARMv7 · v7a](https://github.com/bardia-us/AlarmXV/releases/download/v2.0.0-preview.3/AlarmXV-2.0.0-preview.3-armeabi-v7a.apk) | گوشی‌های قدیمی ۳۲ بیتی · Older 32-bit ARM phones | 15.7 MiB |
+| [Universal](https://github.com/bardia-us/AlarmXV/releases/download/v2.0.0-preview.3/AlarmXV-2.0.0-preview.3-universal.apk) | اگر مطمئن نیستی · When unsure | 52.3 MiB |
+
+[SHA256 checksums · صحت فایل‌ها](https://github.com/bardia-us/AlarmXV/releases/download/v2.0.0-preview.3/SHA256SUMS.txt)
+
+فقط یکی از APKها را نصب کن. امضای قبلی AlarmXV حفظ شده؛ برای آپدیت نیازی به حذف برنامه نیست.
+
+Install only one APK. All files retain the existing signing identity and support installation over the previous version.
 
 ## فارسی
 
-AlarmXV برای وقتی ساخته شده که دکمهٔ خاموش‌کردن آلارم، زیادی راحت است. زنگ را تنظیم کن، مأموریت بیدارشدن را انتخاب کن و اگر خواستی، از بررسی بیداری کمک بگیر تا دوباره نخوابی.
+AlarmXV برای صبح‌هایی ساخته شده که خاموش‌کردن آلارم، زیادی راحته. زمان بیداری رو انتخاب کن، زنگ‌هات رو مرتب کن و با یک زنگ عادی یا انجام مأموریت بیدار شو.
 
-### نسخهٔ منتشرشده — 1.2.0
+- **دو روش بیدارشدن:** زنگ عادی با قطع مستقیم و صدای قابل تنظیم، یا بیداری مأموریتی با ریاضی، حافظه، تکان‌دادن، تایپ و ترتیب اعداد.
+- **آلارم‌های مرتب:** گروه با نام، رنگ و آیکون، جست‌وجو، تکثیر، تکرار هفتگی و شمارش زمان تا آلارم بعدی.
+- **ظاهر یکپارچه:** طراحی Clay، نوارها و منوهای Frosted، تم روشن/تیره/سیستم، هشت رنگ و دکمهٔ متحرک ماه و خورشید.
+- **دو زبان:** فارسی و انگلیسی با پیش‌فرض زبان سیستم و انتخاب دستی در تنظیمات؛ جهت مناسب RTL/LTR.
+- **کنترل بیداری:** صدای گوشی، Snooze، مأموریت‌های قابل تنظیم و بررسی بی‌صدای بیداری با فرصت تأیید ۶۰ ثانیه‌ای.
+- **محلی و متن‌باز:** بدون حساب کاربری؛ آلارم‌ها روی گوشی می‌مونن و بررسی آپدیت فقط با درخواست خودت انجام می‌شه.
 
-- زنگ دقیق هفتگی با موتور Native Android و بازیابی بعد از راه‌اندازی مجدد گوشی.
-- صفحهٔ زنگ روی قفل گوشی، پخش تکرارشوندهٔ صدا و لرزش.
-- مأموریت‌های ریاضی، حافظه و تکان‌دادن گوشی.
-- Snooze و بررسی بی‌صدای بیداری با فرصت تأیید ۶۰ ثانیه‌ای.
-- انتخاب صدا از صداهای خود گوشی؛ نگهداری آلارم‌ها به‌صورت محلی.
+دسترسی‌های آلارم دقیق، اعلان و نمایش روی قفل رو طبق راهنمای داخل اپ فعال کن. محدودیت‌های Android و سازنده، از جمله Force stop، می‌تونن اجرای آلارم رو متوقف کنن.
 
-### در حال توسعه — 2.0 Preview
+### وضعیت پیش‌نمایش
 
-طراحی Clay با عمق نرم، تم روشن/تیره/سیستم و هشت رنگ قابل انتخاب؛ گروه‌های آلارم، جست‌وجو، تکثیر، تنظیم سختی مأموریت‌ها، تایپ و ترتیب اعداد. نمایش تازه‌های نسخه و بررسی دستی آپدیت هم بخشی از این بازطراحی است.
+تحلیل ایستا، **۳۹ تست Flutter** و **۱۵ تست Native/پیکربندی** موفق بودن. ظاهر، اسکرول، منوها و دو زبان با fixtureهای Flutter بررسی شدن؛ APK نهایی هم به‌صورت آپدیت روی Galaxy A34 نصب شد. تست کامل زنگ/مأموریت روی گوشی و اندازه‌گیری جدید FPS انجام نشده. مشکل مقطعی دو پنجره بازتولید نشد؛ مسیر ورود مجدد اصلاح شده و تأیید نهایی دستگاه باقیه.
 
-دو حالت جدا داری: «زنگ عادی» برای قطع مستقیم و صدای قابل تنظیم، و «بیداری مأموریتی» برای وقتی که می‌خواهی با حل مأموریت بیدار بمانی. حالت عادی صدای گوشی را به حداکثر قفل نمی‌کند و بررسی اجباری بیداری ندارد.
-
-تغییر روشن/تیره با دکمهٔ ماه و خورشید بالای صفحه انجام می‌شود؛ پیش‌فرض از سیستم پیروی می‌کند. نوار ناوبری Android در دسترس می‌ماند و منوها و دکمه‌های پایین از شکل و عمق مشترک Clay استفاده می‌کنند.
-
-در preview3 نوارهای ثابت و منوها از Frosted translucency با پس‌زمینهٔ واقعی و متن واضح استفاده می‌کنند. فارسی و انگلیسی هم با پیش‌فرض زبان سیستم و انتخاب دستی در تنظیمات در دسترس‌اند. [گزارش بررسی ظاهر](docs/qa/FROSTED_UI.md) نتیجهٔ تست محلی را از اندازه‌گیری واقعی گوشی جدا می‌کند.
-
-این پیش‌نمایش هنوز انتشار عمومی نیست. [وضعیت بررسی و تست‌ها](docs/qa/STATUS.md) محدودیت‌ها و نتیجهٔ واقعی هر مرحله را ثبت می‌کند؛ نسخهٔ پایدار فعلی همان 1.2.0 است.
-
-### کدام فایل دانلود؟
-
-| فایل | مناسب برای |
-|---|---|
-| `arm64-v8a` | بیشتر گوشی‌های جدید اندرویدی |
-| `armeabi-v7a` | گوشی‌های قدیمی ۳۲ بیتی |
-| `universal`، اگر در نسخه موجود باشد | همهٔ معماری‌های پشتیبانی‌شده، با حجم بیشتر |
-
-دسترسی‌های «آلارم دقیق»، «اعلان»، «نمایش تمام‌صفحه» و «نمایش روی برنامه‌ها» را در صورت درخواست داخل اپ فعال کن. رفتار روی قفل و در پس‌زمینه به نسخهٔ Android و محدودیت‌های سازنده هم بستگی دارد. Force stop از تنظیمات سیستم می‌تواند اجرای آلارم‌ها را متوقف کند.
+[تغییرات هر نسخه](CHANGELOG.md) · [گزارش بررسی و محدودیت‌ها](docs/qa/FROSTED_UI.md)
 
 ## English
 
-AlarmXV helps you stay awake after your alarm. Set a weekly alarm, choose a wake-up mission, and optionally enable a silent follow-up check.
+AlarmXV is for mornings when dismissing an alarm is too easy. Choose a normal alarm with direct dismissal, or wake up by completing a mission.
 
-### Published — 1.2.0
+- **Wake up your way:** configurable Math, Memory, Shake, Typing and Number Order, with sequential missions.
+- **Stay organized:** named and colored groups, search, duplication, weekly repeats and a next-alarm countdown.
+- **Make it yours:** soft Clay depth, frosted chrome and menus, light/dark/system themes, eight accents and an animated sun/moon control.
+- **Two languages:** system-default Persian/English, a manual language setting and proper RTL/LTR layouts.
+- **Useful controls:** system sounds, adjustable normal-alarm volume, snooze and a silent Wake-up Checker with a 60-second confirmation window.
+- **Local and open source:** no account required. Alarm data stays on your phone; update checks happen only when requested.
 
-- Native Android exact alarms, weekly repeats and reboot rescheduling.
-- Lock-screen ringing, looping sound and vibration.
-- Math, Memory and Shake missions.
-- Per-alarm snooze and a silent Wake-up Checker with a 60-second response window.
-- System sound picker and local alarm storage, with no account required.
+### Preview status
 
-### In development — 2.0 Preview
+Static analysis, **39 Flutter tests** and **15 Native/configuration tests** passed. Host-rendered fixtures cover themes, menus, scrolling and localization. The signed APK was installed as an update on a Galaxy A34. A fresh end-to-end device alarm/mission cycle and frame-pacing measurement have not been performed. The intermittent duplicate-window report was not reproduced; launcher re-entry was corrected, with final device confirmation pending.
 
-A coherent soft-depth Clay interface; light, dark and system themes; eight accents; alarm groups; search and duplication; configurable missions; typing and number ordering; in-app release notes and an on-demand update check.
+[Full changelog](CHANGELOG.md) · [Verification details and limits](docs/qa/FROSTED_UI.md)
 
-Choose **Normal alarm** for direct dismissal and freely adjustable system/custom volume, or **Mission alarm** for the stricter wake-up flow. Normal alarms do not enforce maximum volume or mandatory wake checks.
+<details>
+<summary>More previews · تصاویر بیشتر</summary>
 
-The animated moon/sun control switches appearance while system following remains the default. Android navigation stays available; rounded menus and floating action edges share the same Clay surfaces.
+<p align="center">
+<img src="docs/alarmxv-settings.png" width="240" alt="English appearance settings" />
+&nbsp;
+<img src="docs/alarmxv-editor.png" width="240" alt="Persian alarm editor with frosted action footer" />
+</p>
 
-Preview3 adds real frosted backdrops to fixed chrome and menus, plus system-default Persian/English with an in-app language choice. The [visual verification report](docs/qa/FROSTED_UI.md) distinguishes host rendering checks from real-device performance measurements.
-
-The preview is not a public release. See the [QA status](docs/qa/STATUS.md) for completed checks and device-test limitations. Version 1.2.0 remains the current public release.
-
-For downloads, choose **arm64-v8a** for most modern phones, **armeabi-v7a** for older 32-bit phones, or **universal** when offered. Enable the Android alarm and notification access requested in the app. Lock-screen delivery depends on Android and manufacturer restrictions; a system Force stop can prevent alarms from running.
+</details>
 
 ## Privacy · حریم خصوصی
 
-Alarm data and preferences stay on the device. The preview contacts GitHub only when you tap **Check for updates**; it opens a compatible APK in your browser and does not install updates silently. No camera or microphone access is used.
+Alarm data and preferences stay on the device. The app contacts GitHub only when you request a stable-update check. Downloads open in your browser; updates are not installed silently. No camera or microphone permission is used.
+
+آلارم‌ها و تنظیمات روی گوشی ذخیره می‌شن؛ بررسی نسخهٔ پایدار جدید فقط با درخواست تو انجام می‌شه و دانلود از مرورگر ادامه پیدا می‌کنه.
 
 ## Contribute · مشارکت
 
-Licensed under [GNU GPL v3.0](LICENSE). کد این پروژه با مجوز GPL-3.0 منتشر می‌شود.
+Found a bug or have an idea? [Open an issue](https://github.com/bardia-us/AlarmXV/issues) with your app version, phone model, Android version and steps to reproduce it. Leave out private alarm data, passwords and signing keys.
 
-Found a problem? [Open an issue](https://github.com/bardia-us/AlarmXV/issues) with the app version, phone model, Android version and steps to reproduce it. Do not attach passwords, private signing keys or personal alarm data.
+مشکل یا پیشنهادی داری؟ نسخهٔ اپ، مدل گوشی، نسخهٔ Android و روش تکرار مشکل رو در [Issues](https://github.com/bardia-us/AlarmXV/issues) بنویس. مشارکت در طراحی، ترجمه، دسترس‌پذیری و بررسی باگ‌ها خوش‌آمده.
 
-مشکلی دیدی؟ نسخهٔ اپ، مدل گوشی، نسخهٔ Android و روش تکرار مشکل را در [Issues](https://github.com/bardia-us/AlarmXV/issues) بنویس. پیشنهاد و مشارکت در طراحی، دسترس‌پذیری و تست هم خوش‌آمد است.
+Licensed under [GNU GPL v3.0](LICENSE). کد پروژه با مجوز GPL-3.0 منتشر می‌شود.
 
 ---
 
-Built with Flutter + native Android. مستقل از Alarmy؛ از نام، کد یا دارایی‌های اختصاصی آن استفاده نمی‌کند.
+Built with Flutter + native Android. Independent of Alarmy; no proprietary code, branding or assets are used.

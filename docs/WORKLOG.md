@@ -123,3 +123,10 @@
 - Auto-review rejected KEYCODE_WAKEUP because of the prior stop-device-testing instruction; the command was not executed and no workaround attempted. User then explicitly said: install only, they will test on the phone. This is the current device interaction boundary.
 - Ran only adb install --user 0 -r for the final ARM64 Release; Success. Read-only package verification shows2.0.0-preview.3/code5006, user0 installed, unchanged CE/DE data inodes; no package listed for DUAL_APP user95. No uninstall/data clear, screen wake, post-install UI interaction, alarm trigger or FPS test.
 - Local final artifacts retained; no public GitHub Release/tag or merge into main. Current source and documentation checkpoint is backed up on redesign/clay-v2.
+
+## Checkpoint14 — owner authorized public GitHub pre-release, 2026-10-26
+
+- Owner explicitly requested putting the finished work on GitHub with a clean presentation. Publish2.0.0-preview.3 as a public pre-release, keep1.2.0 as stable/latest, promote the matching source to main and attach only the three verified APKs plus SHA256SUMS. No additional tests, builds or phone interaction requested or needed; app sources/artifacts remain those already verified and installed.
+- Refreshed bilingual homepage with current sample-only screenshots, direct architecture download table, features, GPL/license/privacy links and honest verification limits. Replaced stale1.2 RELEASE_NOTES.md with bilingual preview3 notes; no build instructions in the homepage.
+- Removed obsolete tag-push publisher: it uploaded tracked1.2 release-assets for every tag. Publication now uses GitHub CLI with explicit verified local dist/2.0.0-preview.3 assets, staged as a draft before publication. No signing material or real device screenshots included.
+- GitHub connector has no Release/asset publication capability; GitHub CLI authenticated to the same owned public repository is the fallback. Existing main=f10f82d; source backup branch=redesign/clay-v2. Final publication result is recorded after API verification.

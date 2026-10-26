@@ -1,6 +1,6 @@
 # Preview verification status / وضعیت بررسی پیش‌نمایش
 
-Latest development target: **2.0.0-preview.3+5006**. See [Frosted UI/localization verification](FROSTED_UI.md): analyzer clean,39Flutter tests passed,15Native unit/configuration tests passed, explicit visual fixtures passed. This does not establish real-device frame pacing. All three signed Release APKs built; ARM64 installed successfully on user0 at the owner's explicit install-only request on2026-10-26. No subsequent phone UI/alarm test or public Release. See [APK evidence](RELEASE_APKS.md).
+Current pre-release: **2.0.0-preview.3+5006**. See [Frosted UI/localization verification](FROSTED_UI.md): analyzer clean,39Flutter tests passed,15Native unit/configuration tests passed, explicit visual fixtures passed. This does not establish real-device frame pacing. All three signed Release APKs built; ARM64 installed successfully on user0 at the owner's explicit install-only request on2026-10-26. No subsequent phone UI/alarm test. The owner then authorized GitHub publication as a public pre-release; stable1.2.0 is unchanged. See [APK evidence](RELEASE_APKS.md) and the [release page](https://github.com/bardia-us/AlarmXV/releases/tag/v2.0.0-preview.3).
 
 ## Historical preview2 evidence
 

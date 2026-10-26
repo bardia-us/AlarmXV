@@ -1,4 +1,4 @@
-# Private preview APK evidence
+# Preview APK evidence
 
 ## Preview3 — final source checkpoint bca8b4f
 
@@ -10,7 +10,7 @@ Version2.0.0-preview.3+5006, Flutter3.47.8/Dart3.13.7. Final rebuild includes re
 | armeabi-v7a |16,501,137|d517e14097656ee23b30cd81ebe6b1b3dc4bb3b2110797289d75fd9185615150|
 | universal |54,881,635|755e0dd94ba0254b3d8b8bb8cf979c178c56a8e5f0f8263d68ee61b76e839214|
 
-Location: local dist/2.0.0-preview.3, with SHA256SUMS.txt. No public Release. On2026-10-26 the owner explicitly requested installation only and reserved phone testing for themselves. ARM64 installed successfully with adb install --user 0 -r; read-only package metadata confirms preview3/code5006 and the same CE/DE data inode values. No Dual App installation, uninstall or data clearing. No post-install UI/alarm/FPS test.
+Location: local dist/2.0.0-preview.3, with SHA256SUMS.txt; public pre-release publication later authorized for [v2.0.0-preview.3](https://github.com/bardia-us/AlarmXV/releases/tag/v2.0.0-preview.3). On2026-10-26 the owner explicitly requested installation only and reserved phone testing for themselves. ARM64 installed successfully with adb install --user 0 -r; read-only package metadata confirms preview3/code5006 and the same CE/DE data inode values. No Dual App installation, uninstall or data clearing. No post-install UI/alarm/FPS test.
 
 ## Historical preview2
 
