@@ -15,11 +15,12 @@
         android:label="AlarmXV"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
+        android:supportsRtl="true"
         android:enableOnBackInvokedCallback="false">
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:launchMode="singleTask"
+            android:launchMode="singleTop"
             android:taskAffinity="${applicationId}"
             android:documentLaunchMode="never"
             android:theme="@style/LaunchTheme"

@@ -106,3 +106,13 @@
 - Added system/fa/en appearance setting, Flutter SDK localizations, a named-parameter UI catalog and native presentation catalog for alarm/mission/wake-check/notification strings. Layout direction follows language. Saved labels, phrases, core timing and application identity unchanged.
 - Fresh verification: analyzer clean; full Flutter suite39passed/1opt-in visual skipped; separate visual fixture passed; native Release Kotlin compiled and12JVM tests passed. Four UI regression checks were observed failing on the original behavior before fixes; language migration was also RED/GREEN.
 - APK version2.0.0-preview.3+5006 with updated What's New and bilingual changelog. Build artifacts pending final compilation. No new physical-device performance claim; source-reviewed native localization is not a complete alarm-cycle test.
+
+## Checkpoint12 — resumed review and launcher routing, 2026-10-26
+
+- Resumed at1992621 after usage-limit interruption. Initial preview3 binaries had compiled before review; rebuild is required for the follow-ups below. Prior artifacts must not be presented as containing these fixes.
+- Fresh review identified missing native supportsRtl and system-locale-list mismatch. Added Android RTL support while explicitly isolating math operands/answer/keypad, raw numeric progress and clocks as LTR. Native language now chooses first supported fa/en system locale, consistent with Flutter.
+- Locale regression failed on de/fa/en before the fix; two manifest checks failed on the original singleTask/missing RTL configuration. After the fix all15Native tests passed, Kotlin compiled; source reviewer found no blocking issue in the follow-up.
+- Owner again reported intermittent two Android windows. Connected device read-only snapshot: one task/user0 with Main root/top, preview2/code5005; DUAL_APP user95 not installed. No duplicate state was present and no old task was removed.
+- Confirmed source issue predates preview3: Main.singleTask clears Ring/Check above Main when launcher opens, then the guard reopens Ring. Fixed Main to singleTop and normalized AlarmClockInfo showIntent to the actual launcher identity (no per-alarm data). Native Ring/Check singleTask and common affinity remain.
+- Main.onCreate/onNewIntent defensively route only to the existing strict session using the same alarm/snooze/token. No onResume routing, audio restart, alarm reschedule or task deletion. Normal-mode Back remains unrestricted. Source fix is not proof of the intermittent OEM two-task symptom being eliminated.
+- Reference: https://developer.android.com/guide/components/activities/tasks-and-back-stack and AOSP ActivityStarter.complyActivityFlags. No new permissions or application identity changes.

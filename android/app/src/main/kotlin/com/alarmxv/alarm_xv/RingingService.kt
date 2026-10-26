@@ -248,6 +248,7 @@ class RingingService : Service() {
             setPadding(dp(28), dp(28), dp(28), dp(28))
             setBackgroundColor(appearance.background)
             addView(TextClock(this@RingingService).apply {
+                textDirection = View.TEXT_DIRECTION_LTR
                 format12Hour = "h:mm"
                 format24Hour = "HH:mm"
                 textSize = 76f
@@ -488,6 +489,14 @@ class RingingService : Service() {
         fun isNormalSessionActive(alarmId: String, expectedToken: String): Boolean =
             activeInstance?.let { it.currentAlarm?.isNormal == true && it.currentAlarm?.id == alarmId &&
                 expectedToken.isNotEmpty() && it.sessionToken == expectedToken } == true
+
+        /** Reopen the existing strict session; never restart audio or mint a token. */
+        fun activeScreenIntent(context: Context): Intent? {
+            val service = activeInstance ?: return null
+            val alarm = service.currentAlarm ?: return null
+            if (alarm.isNormal) return null
+            return AlarmRingActivity.createIntent(context, alarm, service.currentSnoozeCount, service.sessionToken)
+        }
 
         fun dismissNormal(alarmId: String, expectedToken: String): Boolean =
             activeInstance?.dismissNormalSession(alarmId, expectedToken) == true

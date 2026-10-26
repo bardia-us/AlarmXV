@@ -184,13 +184,7 @@ object AlarmScheduler {
         val showIntent = PendingIntent.getActivity(
             context,
             0,
-            Intent(context, MainActivity::class.java).apply {
-                data = Uri.Builder()
-                    .scheme("alarmxv")
-                    .authority("show")
-                    .appendPath(alarm.id)
-                    .build()
-            },
+            MainActivity.createLauncherIntent(context),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         manager.setAlarmClock(AlarmManager.AlarmClockInfo(triggerAt, showIntent), operation)

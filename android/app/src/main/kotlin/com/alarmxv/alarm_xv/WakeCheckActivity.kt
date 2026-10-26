@@ -124,6 +124,7 @@ class WakeCheckActivity : Activity() {
             appearance.elevate(this, 6f)
         }
         content.addView(TextClock(this).apply {
+            textDirection = View.TEXT_DIRECTION_LTR
             format12Hour = "h:mm"
             format24Hour = "HH:mm"
             textSize = 72f
@@ -157,6 +158,7 @@ class WakeCheckActivity : Activity() {
             setTextColor(appearance.accent)
         }, linearParams(top = 18))
         countdown = TextView(this).apply {
+            textDirection = View.TEXT_DIRECTION_LTR
             text = "01:00"
             textSize = 38f
             gravity = Gravity.CENTER

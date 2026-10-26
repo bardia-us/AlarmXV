@@ -3,6 +3,7 @@
 ## 2.0.0-preview.3+5006 — Private preview / پیش‌نمایش خصوصی
 
 ### فارسی
+- اصلاح مسیر ورود مجدد از آیکون برنامه و لینک ساعت اندروید: صفحهٔ فعال زنگ بی‌دلیل بسته و دوباره ساخته نمی‌شود؛ جلسه و مهلت مأموریت حفظ می‌شود.
 - نوار بالای تنظیمات، خانه و گروه‌ها و نوار ثابت دکمه‌ها از پس‌زمینهٔ واقعی با بلور محدود استفاده می‌کنند؛ متن و آیکون‌ها واضح باقی می‌مانند.
 - منوهای بازشونده و انتخابگرها متریال Frosted یکپارچه و گذار مشترک سطح/محتوا دارند؛ کاهش افکت و کنتراست بالا از سطح مات استفاده می‌کنند.
 - اصلاح بریدگی مستطیلی سایهٔ کارت آلارم پس از پایان انیمیشن و گوشه‌های انتخاب ساعت؛ دکمهٔ برگشت گرد با کشش ملایم.
@@ -10,6 +11,7 @@
 - نسخه و تازه‌های نصب به‌روز شدند. شواهد تست و محدودیت عملکرد در docs/qa/FROSTED_UI.md ثبت می‌شود؛ انتشار عمومی انجام نشده است.
 
 ### English
+- Normalize launcher/AlarmClockInfo entry and retain the active alarm screen/session when reopening the app; avoid clearing the native screen above Main.
 - Real clipped backdrop blur for Home, Settings and Groups app bars and fixed action footers, with sharp text and icons.
 - Unified frosted popup/selection panels with one material/content transition and opaque reduced-effects/high-contrast fallback.
 - Removed settled list-animation clipping of rounded alarm-card shadows; rounded time selections and an elastic Back button.

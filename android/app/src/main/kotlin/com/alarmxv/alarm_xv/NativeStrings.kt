@@ -16,9 +16,13 @@ object NativeStrings {
                 .getOrDefault("system")
             cachedJson = encoded
         }
-        val selected = if (cachedPreference in setOf("en", "fa")) cachedPreference
-            else context.resources.configuration.locales[0].language
-        return if (selected == "fa") "fa" else "en"
+        val locales = context.resources.configuration.locales
+        return resolveLanguage(cachedPreference, (0 until locales.size()).map { locales[it].language })
+    }
+
+    internal fun resolveLanguage(preference: String, systemLanguages: List<String>): String {
+        return if (preference in setOf("en", "fa")) preference
+            else systemLanguages.firstOrNull { it == "en" || it == "fa" } ?: "en"
     }
 
     fun text(context: Context, message: String, vararg values: Any?): String =

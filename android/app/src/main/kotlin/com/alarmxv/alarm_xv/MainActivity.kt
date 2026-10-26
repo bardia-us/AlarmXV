@@ -2,10 +2,13 @@ package com.alarmxv.alarm_xv
 
 import android.Manifest
 import android.content.Intent
+import android.content.Context
+import android.content.ComponentName
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.media.RingtoneManager
 import android.os.Build
+import android.os.Bundle
 import android.provider.Settings
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -17,6 +20,32 @@ class MainActivity : FlutterActivity() {
     private val ringtonePickerRequestCode = 1703
     private var notificationPermissionResult: MethodChannel.Result? = null
     private var ringtonePickerResult: MethodChannel.Result? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        showActiveAlarm()
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        showActiveAlarm()
+    }
+
+    private fun showActiveAlarm() {
+        val screen = RingingService.activeScreenIntent(this) ?: return
+        startActivity(screen)
+        // A cold alarm may own the task root. Do not leave a second Flutter
+        // activity above it when the launcher was used during a strict session.
+        if (!isTaskRoot) finish()
+    }
+
+    companion object {
+        /** Same task identity as the launcher, including AlarmClockInfo's link. */
+        fun createLauncherIntent(context: Context): Intent =
+            Intent.makeMainActivity(ComponentName(context, MainActivity::class.java))
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
+    }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)

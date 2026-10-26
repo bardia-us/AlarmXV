@@ -293,6 +293,7 @@ class AlarmRingActivity : Activity(), SensorEventListener {
         }
 
         val clock = TextClock(this).apply {
+            textDirection = View.TEXT_DIRECTION_LTR
             format12Hour = "h:mm"
             format24Hour = "HH:mm"
             textSize = if (compact) 68f else 82f
@@ -319,6 +320,7 @@ class AlarmRingActivity : Activity(), SensorEventListener {
         content.addView(challengeBadge, linearParams(top = if (compact) 18 else 26))
 
         challengeProgressText = textView("", 14f, colorMuted, Typeface.NORMAL).apply {
+            textDirection = View.TEXT_DIRECTION_LTR
             gravity = Gravity.CENTER
         }
         content.addView(challengeProgressText, linearParams(top = 10))
@@ -568,6 +570,8 @@ class AlarmRingActivity : Activity(), SensorEventListener {
             NativeStrings.text(this@AlarmRingActivity, "Motion sensor unavailable · solve math instead"), 14f, colorMuted, Typeface.NORMAL
         ).apply { gravity = Gravity.CENTER }, linearParams(top = 8))
         val question = textView("", 46f, colorText, Typeface.BOLD).apply {
+            // Keep operand order inside a Persian right-to-left screen.
+            textDirection = View.TEXT_DIRECTION_LTR
             gravity = Gravity.CENTER
             includeFontPadding = false
         }
@@ -575,6 +579,7 @@ class AlarmRingActivity : Activity(), SensorEventListener {
             gravity = Gravity.CENTER
         }
         val answer = textView("", 34f, colorText, Typeface.NORMAL).apply {
+            textDirection = View.TEXT_DIRECTION_LTR
             gravity = Gravity.CENTER
             setPadding(dp(14), dp(12), dp(14), dp(12))
             background = roundedBackground(colorInput, 16)
@@ -594,6 +599,7 @@ class AlarmRingActivity : Activity(), SensorEventListener {
         }
 
         val keypad = GridLayout(this).apply {
+            layoutDirection = View.LAYOUT_DIRECTION_LTR
             columnCount = 3
             rowCount = 4
         }
@@ -793,6 +799,7 @@ class AlarmRingActivity : Activity(), SensorEventListener {
         }, linearParams())
         challengeContainer.addView(icon, linearParams(top = 10))
         shakeCountText = textView("$shakeCount / ${alarm.missionSettings.shakeCount}", 36f, colorText, Typeface.BOLD).apply {
+            textDirection = View.TEXT_DIRECTION_LTR
             gravity = Gravity.CENTER
         }
         challengeContainer.addView(shakeCountText, linearParams(top = 2))
