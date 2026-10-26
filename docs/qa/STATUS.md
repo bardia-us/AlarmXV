@@ -1,5 +1,11 @@
 # Preview verification status / وضعیت بررسی پیش‌نمایش
 
+## Stable2.0.0+5007
+
+Owner requested stable/latest publication with an actual app-version increase. All three Release APKs were freshly rebuilt for2.0.0/code5007 and their embedded manifest versions and unchanged signing certificate verified. This is a version/packaging change over the reviewed preview implementation; the39Flutter/15Native test results below are earlier implementation evidence, not freshly rerun stable tests. No new phone install or interaction was performed for this release. See [APK evidence](RELEASE_APKS.md) and [v2.0.0](https://github.com/bardia-us/AlarmXV/releases/tag/v2.0.0).
+
+## Historical preview3 verification
+
 Current pre-release: **2.0.0-preview.3+5006**. See [Frosted UI/localization verification](FROSTED_UI.md): analyzer clean,39Flutter tests passed,15Native unit/configuration tests passed, explicit visual fixtures passed. This does not establish real-device frame pacing. All three signed Release APKs built; ARM64 installed successfully on user0 at the owner's explicit install-only request on2026-10-26. No subsequent phone UI/alarm test. The owner then authorized GitHub publication as a public pre-release; stable1.2.0 is unchanged. See [APK evidence](RELEASE_APKS.md) and the [release page](https://github.com/bardia-us/AlarmXV/releases/tag/v2.0.0-preview.3).
 
 ## Historical preview2 evidence

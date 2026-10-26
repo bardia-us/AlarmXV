@@ -8,9 +8,9 @@
 
 An open-source Android alarm clock with wake-up missions, Clay surfaces and Persian/English support.
 
-[**Download preview · دانلود پیش‌نمایش**](https://github.com/bardia-us/AlarmXV/releases/tag/v2.0.0-preview.3) · [Stable 1.2.0](https://github.com/bardia-us/AlarmXV/releases/latest) · [Changelog](CHANGELOG.md) · [Issues](https://github.com/bardia-us/AlarmXV/issues)
+[**Download · دانلود نسخهٔ پایدار**](https://github.com/bardia-us/AlarmXV/releases/tag/v2.0.0) · [Latest release](https://github.com/bardia-us/AlarmXV/releases/latest) · [Changelog](CHANGELOG.md) · [Issues](https://github.com/bardia-us/AlarmXV/issues)
 
-**2.0.0-preview.3** · Flutter + Kotlin · Android · [GPL-3.0](LICENSE)
+**2.0.0** · Flutter + Kotlin · Android · [GPL-3.0](LICENSE)
 
 <img src="docs/alarmxv-light.png" width="240" alt="Persian alarm list in light mode" />
 &nbsp;
@@ -22,17 +22,17 @@ An open-source Android alarm clock with wake-up missions, Clay surfaces and Pers
 
 ## دانلود · Download
 
-**2.0.0-preview.3** یک پیش‌انتشار عمومی است. نسخهٔ پایدار فعلی **1.2.0** باقی می‌ماند.
+**2.0.0** نسخهٔ پایدار جدید AlarmXV است؛ با کد **5007** روی نسخه‌های قبلی نصب می‌شود.
 
-**2.0.0-preview.3 is a public pre-release.** Version **1.2.0** remains the stable release.
+**2.0.0 is the current stable release**, with versionCode **5007** for upgrading existing installations.
 
 | APK | مناسب برای · Best for | Size |
 |---|---|---:|
-| [ARM64 · v8a](https://github.com/bardia-us/AlarmXV/releases/download/v2.0.0-preview.3/AlarmXV-2.0.0-preview.3-arm64-v8a.apk) | بیشتر گوشی‌های جدید · Most modern phones | 18.1 MiB |
-| [ARMv7 · v7a](https://github.com/bardia-us/AlarmXV/releases/download/v2.0.0-preview.3/AlarmXV-2.0.0-preview.3-armeabi-v7a.apk) | گوشی‌های قدیمی ۳۲ بیتی · Older 32-bit ARM phones | 15.7 MiB |
-| [Universal](https://github.com/bardia-us/AlarmXV/releases/download/v2.0.0-preview.3/AlarmXV-2.0.0-preview.3-universal.apk) | اگر مطمئن نیستی · When unsure | 52.3 MiB |
+| [ARM64 · v8a](https://github.com/bardia-us/AlarmXV/releases/download/v2.0.0/AlarmXV-2.0.0-arm64-v8a.apk) | بیشتر گوشی‌های جدید · Most modern phones | 18.1 MiB |
+| [ARMv7 · v7a](https://github.com/bardia-us/AlarmXV/releases/download/v2.0.0/AlarmXV-2.0.0-armeabi-v7a.apk) | گوشی‌های قدیمی ۳۲ بیتی · Older 32-bit ARM phones | 15.7 MiB |
+| [Universal](https://github.com/bardia-us/AlarmXV/releases/download/v2.0.0/AlarmXV-2.0.0-universal.apk) | اگر مطمئن نیستی · When unsure | 52.3 MiB |
 
-[SHA256 checksums · صحت فایل‌ها](https://github.com/bardia-us/AlarmXV/releases/download/v2.0.0-preview.3/SHA256SUMS.txt)
+[SHA256 checksums · صحت فایل‌ها](https://github.com/bardia-us/AlarmXV/releases/download/v2.0.0/SHA256SUMS.txt)
 
 فقط یکی از APKها را نصب کن. امضای قبلی AlarmXV حفظ شده؛ برای آپدیت نیازی به حذف برنامه نیست.
 
@@ -51,9 +51,9 @@ AlarmXV برای صبح‌هایی ساخته شده که خاموش‌کردن 
 
 دسترسی‌های آلارم دقیق، اعلان و نمایش روی قفل رو طبق راهنمای داخل اپ فعال کن. محدودیت‌های Android و سازنده، از جمله Force stop، می‌تونن اجرای آلارم رو متوقف کنن.
 
-### وضعیت پیش‌نمایش
+### وضعیت بررسی
 
-تحلیل ایستا، **۳۹ تست Flutter** و **۱۵ تست Native/پیکربندی** موفق بودن. ظاهر، اسکرول، منوها و دو زبان با fixtureهای Flutter بررسی شدن؛ APK نهایی هم به‌صورت آپدیت روی Galaxy A34 نصب شد. تست کامل زنگ/مأموریت روی گوشی و اندازه‌گیری جدید FPS انجام نشده. مشکل مقطعی دو پنجره بازتولید نشد؛ مسیر ورود مجدد اصلاح شده و تأیید نهایی دستگاه باقیه.
+تحلیل ایستا، **۳۹ تست Flutter** و **۱۵ تست Native/پیکربندی** در بررسی کد پیش‌نمایش موفق بودن. ظاهر، اسکرول، منوها و دو زبان با fixtureهای Flutter بررسی شدن؛ پیش‌نمایش همین کد روی Galaxy A34 نصب شد. APKهای پایدار 2.0 با نسخهٔ جدید از نو ساخته شدن؛ تست تازهٔ گوشی به مالک واگذار شده. تست کامل زنگ/مأموریت روی گوشی و اندازه‌گیری جدید FPS انجام نشده. مشکل مقطعی دو پنجره بازتولید نشد؛ مسیر ورود مجدد اصلاح شده و تأیید نهایی دستگاه باقیه.
 
 [تغییرات هر نسخه](CHANGELOG.md) · [گزارش بررسی و محدودیت‌ها](docs/qa/FROSTED_UI.md)
 
@@ -68,9 +68,9 @@ AlarmXV is for mornings when dismissing an alarm is too easy. Choose a normal al
 - **Useful controls:** system sounds, adjustable normal-alarm volume, snooze and a silent Wake-up Checker with a 60-second confirmation window.
 - **Local and open source:** no account required. Alarm data stays on your phone; update checks happen only when requested.
 
-### Preview status
+### Verification
 
-Static analysis, **39 Flutter tests** and **15 Native/configuration tests** passed. Host-rendered fixtures cover themes, menus, scrolling and localization. The signed APK was installed as an update on a Galaxy A34. A fresh end-to-end device alarm/mission cycle and frame-pacing measurement have not been performed. The intermittent duplicate-window report was not reproduced; launcher re-entry was corrected, with final device confirmation pending.
+Static analysis, **39 Flutter tests** and **15 Native/configuration tests** passed for the preview implementation. Host-rendered fixtures cover themes, menus, scrolling and localization; that preview was installed on a Galaxy A34. Stable 2.0 APKs are rebuilt with the increased version; fresh phone testing is being handled by the owner. A fresh end-to-end device alarm/mission cycle and frame-pacing measurement have not been performed. The intermittent duplicate-window report was not reproduced; launcher re-entry was corrected, with final device confirmation pending.
 
 [Full changelog](CHANGELOG.md) · [Verification details and limits](docs/qa/FROSTED_UI.md)
 

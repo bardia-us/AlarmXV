@@ -138,3 +138,11 @@
 - Exactly4assets uploaded: ARM64, ARMv7, universal and SHA256SUMS. GitHub server SHA256 digests and byte lengths matched all four local files before publication. Existing signing identity preserved.
 - Public README now includes current Persian/English sample screenshots, architecture download table, versioned links, privacy/GPL/contribution sections and the actual test limitations. Repo description and topics refreshed. Old1.2 Release and assets unchanged; obsolete tag publisher removed to prevent stale artifact uploads.
 - No additional tests/builds or phone interactions performed for publication. The user's install-only/they-test-device boundary remains in effect.
+
+## Checkpoint16 — stable version correction requested, 2026-10-26
+
+- Owner explicitly requested stable/latest publication with an increased app version and freshly rebuilt/uploaded APKs. Corrected pubspec from2.0.0-preview.3+5006 to2.0.0+5007 and in-app What's New fallback to2.0.0. Native package metadata is generated from this version; do not relabel the preview APKs.
+- Retain existing applicationId/release signer and the three requested variants (ARM64,ARMv7,universal). Build pipeline started for a fresh Release rebuild into dist/2.0.0; earlier preview artifacts/releases remain historical.
+- README/RELEASE_NOTES/CHANGELOG now target stable2.0.0, with stable download links and accurate attribution of the earlier39Flutter/15Native tests to the preview implementation. No new tests or phone interactions requested/run for this packaging correction. Final APK manifest/signature and remote-upload checks are required before publication.
+
+- Fresh split Release build56.0s, universal45.8s, all successful. Each APK inspected: versionName2.0.0/code5007, unchanged com.alarmxv.alarm_xv and release certificate4f1567... . New stable artifact hashes/sizes recorded in docs/qa/RELEASE_APKS.md; no preview file relabeled. Draft upload and Stable/Latest promotion follow checksum validation.

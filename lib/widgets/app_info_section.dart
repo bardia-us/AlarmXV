@@ -19,7 +19,7 @@ class WhatsNewSheet {
 
   static Future<void> show(
     BuildContext context, {
-    String version = '2.0.0-preview.3',
+    String version = '2.0.0',
   }) => showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,

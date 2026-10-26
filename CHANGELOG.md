@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.0.0+5007 — Stable / پایدار
+
+### فارسی
+- انتشار پایدار 2.0 با افزایش نسخهٔ واقعی اپ و کد5007؛ هر سه APK از نو در حالت Release ساخته شدند و روی پیش‌نمایش5006 قابل آپدیت‌اند.
+- همان طراحی Clay/Frosted، فارسی و انگلیسی، گروه‌ها، مأموریت‌ها و اصلاحات ورود مجدد آلارم؛ بدون تغییر جدید در منطق زنگ.
+- تازه‌های نصب، صفحهٔ اصلی و دانلودهای GitHub با نسخهٔ پایدار هماهنگ شدند. شواهد بررسی قبلی و محدودیت‌های تست دستگاه در گزارش QA حفظ شده‌اند.
+
+### English
+- Stable 2.0 with the actual app version advanced to2.0.0/code5007; all three Release APKs rebuilt for an in-place upgrade over preview5006.
+- Retains Clay/Frosted UI, Persian/English, alarm groups, missions and launcher fixes; no further alarm-engine changes.
+- In-app release notes, homepage and GitHub downloads aligned with the stable release. Prior verification evidence and device-test limits remain documented.
+
 ## 2.0.0-preview.3+5006 — Public pre-release / پیش‌انتشار عمومی
 
 ### فارسی

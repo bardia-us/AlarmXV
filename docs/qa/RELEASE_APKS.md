@@ -1,5 +1,17 @@
 # Preview APK evidence
 
+## Stable2.0.0+5007
+
+Fresh Release rebuild, not renamed preview binaries. All three APK manifests embed versionName2.0.0/versionCode5007; applicationId com.alarmxv.alarm_xv and the prior release signing certificate are unchanged. Local output dist/2.0.0 with SHA256SUMS.txt. No new stable APK installation or phone test was requested/performed.
+
+| APK | Bytes | SHA256 |
+|---|---:|---|
+| arm64-v8a |18,983,469|cbb13f1259edb29dab49ba10a38b5d0007aa933c48154b8d83ca94895a4bfd3d|
+| armeabi-v7a |16,501,125|6db7069bd7096ae274816cd83dbe14dc25a00f0b80afaf880f4839eb10b0d941|
+| universal |54,881,623|2368c29c18d081b279c16a9959e6344cbf9ccd3e19809fe3b9d097f7c4965e52|
+
+Publication target: [stable v2.0.0](https://github.com/bardia-us/AlarmXV/releases/tag/v2.0.0), to replace1.2.0 as Latest while retaining preview releases as history.
+
 ## Preview3 — final source checkpoint bca8b4f
 
 Version2.0.0-preview.3+5006, Flutter3.47.8/Dart3.13.7. Final rebuild includes reviewed launcher/RTL/locale fixes. All three are Release APKs, com.alarmxv.alarm_xv, code5006, one Main launcher and the unchanged v1.2 signing certificate. Manifest inspection confirms Main singleTop, documentLaunchMode never and supportsRtl true.
