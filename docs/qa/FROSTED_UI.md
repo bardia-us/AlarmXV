@@ -24,9 +24,9 @@ Version: 2.0.0-preview.3+5006. Canonical source: redesign/clay-v2.
 ## Limits
 
 - These are host rendering/interaction and JVM tests, not a new real-device frame-time capture. No claim of120FPS, reduced jank, or an end-to-end lockscreen/idle/reboot/mission cycle for preview3.
-- No preview3 installation or launcher inspection on the phone yet. The previous preview2 install was explicitly scoped to user0 and did not create a Dual App installation.
+- Final reviewed preview3 ARM64 Release installed on2026-10-26 at the owner's explicit instruction to install only; read-only package metadata confirms code5006 on user0 and no Dual App installation. The owner will perform phone testing; no post-install UI/alarm/launcher/FPS test was run.
 - Owner reconnected the Samsung on2026-10-26. Read-only snapshot showed preview2/code5005 and exactly one user0 task, Main root/top; user95 had no AlarmXV. The reported intermittent two-task state was not present, so it is not claimed reproduced or conclusively fixed. No existing task was deleted.
 - Existing toolchain emits future Gradle/AGP/Kotlin support warnings; upgrading that toolchain is outside this UI/localization patch.
-- Release artifact compilation/signature results are recorded after completion, separately from visual verification.
+- Final v8a/v7a/universal Release compilation and signature checks passed. Artifact sizes/hashes are recorded in [RELEASE_APKS.md](RELEASE_APKS.md), separately from visual verification.
 
 خلاصه: ظاهر و تعامل با fixtureهای واقعی Flutter بررسی شد؛ این نتیجه جای تست روانی و عملکرد واقعی آلارم روی گوشی را نمی‌گیرد.

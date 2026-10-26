@@ -15,7 +15,7 @@
 - [x] Remove completed list-size transition clipping of card shadows; unify the time picker's rounded selection shapes and inspect rendered edges.
 - [x] Add persisted system/fa/en language selection, standard Material/Cupertino/Widgets localization, LTR/RTL and English/Persian strings for Flutter and native alarm/checker/notifications. Preserve user-entered labels/phrases and stored alarm data.
 - [x] Run scoped widget/unit checks, analyzer and visual fixtures in both themes/languages, menu open/close and scrolled header states. Capture images only in explicit test fixtures, never app rendering. Inspect SafeArea and large text/keyboard.
-- [ ] Compile Android output, record what was actually tested and any unmeasured runtime performance. No public Release or additional device installation without applicable authorization. Save checkpoint/changelog/What's New with versioned artifacts if built.
+- [x] Compile Android output, record what was actually tested and any unmeasured runtime performance. No public Release or additional device installation without applicable authorization. Save checkpoint/changelog/What's New with versioned artifacts if built. Owner explicitly requested installation only on2026-10-26; user0 ARM64 upgrade completed, phone testing left to owner.
 
 **Review focus:** Overlapping footer/menu filters stay independent; topmost material blocks taps; initial content is below status/toolbar; popups do not fade text separately; stable card shadows are not rectangularly clipped; system locale changes preserve manual preference; native challenge parsing is locale-safe.
 

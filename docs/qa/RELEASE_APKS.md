@@ -1,5 +1,19 @@
 # Private preview APK evidence
 
+## Preview3 — final source checkpoint bca8b4f
+
+Version2.0.0-preview.3+5006, Flutter3.47.8/Dart3.13.7. Final rebuild includes reviewed launcher/RTL/locale fixes. All three are Release APKs, com.alarmxv.alarm_xv, code5006, one Main launcher and the unchanged v1.2 signing certificate. Manifest inspection confirms Main singleTop, documentLaunchMode never and supportsRtl true.
+
+| APK | Bytes | SHA256 |
+|---|---:|---|
+| arm64-v8a |18,983,481|4816762e687cfb39f507eb8fdaabd8da00b68377c7f594933c35cbc79f4ebd8e|
+| armeabi-v7a |16,501,137|d517e14097656ee23b30cd81ebe6b1b3dc4bb3b2110797289d75fd9185615150|
+| universal |54,881,635|755e0dd94ba0254b3d8b8bb8cf979c178c56a8e5f0f8263d68ee61b76e839214|
+
+Location: local dist/2.0.0-preview.3, with SHA256SUMS.txt. No public Release. On2026-10-26 the owner explicitly requested installation only and reserved phone testing for themselves. ARM64 installed successfully with adb install --user 0 -r; read-only package metadata confirms preview3/code5006 and the same CE/DE data inode values. No Dual App installation, uninstall or data clearing. No post-install UI/alarm/FPS test.
+
+## Historical preview2
+
 Version2.0.0-preview.2+5005, compiled with Flutter3.47.8 stable/Dart3.13.7. Not publicly released or installed on the phone.
 
 | APK | Bytes | SHA256 |

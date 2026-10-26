@@ -116,3 +116,10 @@
 - Confirmed source issue predates preview3: Main.singleTask clears Ring/Check above Main when launcher opens, then the guard reopens Ring. Fixed Main to singleTop and normalized AlarmClockInfo showIntent to the actual launcher identity (no per-alarm data). Native Ring/Check singleTask and common affinity remain.
 - Main.onCreate/onNewIntent defensively route only to the existing strict session using the same alarm/snooze/token. No onResume routing, audio restart, alarm reschedule or task deletion. Normal-mode Back remains unrestricted. Source fix is not proof of the intermittent OEM two-task symptom being eliminated.
 - Reference: https://developer.android.com/guide/components/activities/tasks-and-back-stack and AOSP ActivityStarter.complyActivityFlags. No new permissions or application identity changes.
+
+## Checkpoint13 — final Release outputs and install-only request, 2026-10-26
+
+- Source checkpoint bca8b4f includes launcher/RTL/locale review fixes. Final ARMv7/ARM64 split compilation61.5s, universal15.2s; all passed. Signatures verified against unchanged v1.2 certificate; manifests code5006 and one launcher, Main singleTop and supportsRtl true. Sizes/hashes in docs/qa/RELEASE_APKS.md and local dist/2.0.0-preview.3/SHA256SUMS.txt.
+- Auto-review rejected KEYCODE_WAKEUP because of the prior stop-device-testing instruction; the command was not executed and no workaround attempted. User then explicitly said: install only, they will test on the phone. This is the current device interaction boundary.
+- Ran only adb install --user 0 -r for the final ARM64 Release; Success. Read-only package verification shows2.0.0-preview.3/code5006, user0 installed, unchanged CE/DE data inodes; no package listed for DUAL_APP user95. No uninstall/data clear, screen wake, post-install UI interaction, alarm trigger or FPS test.
+- Local final artifacts retained; no public GitHub Release/tag or merge into main. Current source and documentation checkpoint is backed up on redesign/clay-v2.
