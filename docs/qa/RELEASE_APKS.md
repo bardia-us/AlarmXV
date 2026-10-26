@@ -1,4 +1,4 @@
-# Preview APK evidence
+# Release APK evidence
 
 ## Stable2.0.0+5007
 
@@ -10,7 +10,7 @@ Fresh Release rebuild, not renamed preview binaries. All three APK manifests emb
 | armeabi-v7a |16,501,125|6db7069bd7096ae274816cd83dbe14dc25a00f0b80afaf880f4839eb10b0d941|
 | universal |54,881,623|2368c29c18d081b279c16a9959e6344cbf9ccd3e19809fe3b9d097f7c4965e52|
 
-Publication target: [stable v2.0.0](https://github.com/bardia-us/AlarmXV/releases/tag/v2.0.0), to replace1.2.0 as Latest while retaining preview releases as history.
+Published: [stable v2.0.0](https://github.com/bardia-us/AlarmXV/releases/tag/v2.0.0), now Latest; preview releases retained as history. GitHub server SHA256 digests and byte lengths matched all three fresh APKs and SHA256SUMS.txt before publication.
 
 ## Preview3 — final source checkpoint bca8b4f
 

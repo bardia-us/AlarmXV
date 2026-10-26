@@ -146,3 +146,10 @@
 - README/RELEASE_NOTES/CHANGELOG now target stable2.0.0, with stable download links and accurate attribution of the earlier39Flutter/15Native tests to the preview implementation. No new tests or phone interactions requested/run for this packaging correction. Final APK manifest/signature and remote-upload checks are required before publication.
 
 - Fresh split Release build56.0s, universal45.8s, all successful. Each APK inspected: versionName2.0.0/code5007, unchanged com.alarmxv.alarm_xv and release certificate4f1567... . New stable artifact hashes/sizes recorded in docs/qa/RELEASE_APKS.md; no preview file relabeled. Draft upload and Stable/Latest promotion follow checksum validation.
+
+## Checkpoint17 — stable2.0.0 published and Latest verified, 2026-10-26
+
+- Source tagv2.0.0 points tobee1a5c023a69a3fb3654af485a80299a1f7b811. Real embedded app version2.0.0/code5007 verified in all three rebuilt Release APKs; unchanged signer and applicationId.
+- Published https://github.com/bardia-us/AlarmXV/releases/tag/v2.0.0 (release424642466). REST latest endpoint confirms tagv2.0.0, draft=false and prerelease=false. This supersedes the earlier pre-release classification; preview3 remains historical.
+- Exactly4assets: arm64-v8a18,983,469B; armeabi-v7a16,501,125B; universal54,881,623B; SHA256SUMS287B. Server digests matched local files before publication.
+- README, release notes, changelog and source promoted together with stable links/version. No new phone installation, UI test or alarm-engine change performed; owner continues device testing.

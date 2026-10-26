@@ -1,6 +1,8 @@
-# Preview verification status / وضعیت بررسی پیش‌نمایش
+# Verification status / وضعیت بررسی نسخه‌ها
 
 ## Stable2.0.0+5007
+
+Published as Stable/Latest on2026-10-26: [v2.0.0](https://github.com/bardia-us/AlarmXV/releases/tag/v2.0.0), draft=false/prerelease=false. All four remote assets (three APKs and checksums) match local SHA256/byte lengths.
 
 Owner requested stable/latest publication with an actual app-version increase. All three Release APKs were freshly rebuilt for2.0.0/code5007 and their embedded manifest versions and unchanged signing certificate verified. This is a version/packaging change over the reviewed preview implementation; the39Flutter/15Native test results below are earlier implementation evidence, not freshly rerun stable tests. No new phone install or interaction was performed for this release. See [APK evidence](RELEASE_APKS.md) and [v2.0.0](https://github.com/bardia-us/AlarmXV/releases/tag/v2.0.0).
 
