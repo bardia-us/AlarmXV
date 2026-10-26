@@ -4,6 +4,8 @@
 
 Published as Stable/Latest on2026-10-26: [v2.0.0](https://github.com/bardia-us/AlarmXV/releases/tag/v2.0.0), draft=false/prerelease=false. All four remote assets (three APKs and checksums) match local SHA256/byte lengths.
 
+Later installation follow-up: owner reported failure and authorized device testing. Both a fresh install and replacement from a freshly downloaded GitHub ARM64 APK succeeded on the Galaxy A34; version2.0.0/code5007 confirmed. The previous file in Downloads was corrupt (wrong SHA256, APK signature/ZIP CRC failure). See [installation evidence](INSTALLATION.md). No app-code/Release-asset change or runtime alarm test was needed.
+
 Owner requested stable/latest publication with an actual app-version increase. All three Release APKs were freshly rebuilt for2.0.0/code5007 and their embedded manifest versions and unchanged signing certificate verified. This is a version/packaging change over the reviewed preview implementation; the39Flutter/15Native test results below are earlier implementation evidence, not freshly rerun stable tests. No new phone install or interaction was performed for this release. See [APK evidence](RELEASE_APKS.md) and [v2.0.0](https://github.com/bardia-us/AlarmXV/releases/tag/v2.0.0).
 
 ## Historical preview3 verification

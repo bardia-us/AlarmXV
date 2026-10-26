@@ -2,7 +2,7 @@
 
 ## Stable2.0.0+5007
 
-Fresh Release rebuild, not renamed preview binaries. All three APK manifests embed versionName2.0.0/versionCode5007; applicationId com.alarmxv.alarm_xv and the prior release signing certificate are unchanged. Local output dist/2.0.0 with SHA256SUMS.txt. No new stable APK installation or phone test was requested/performed.
+Fresh Release rebuild, not renamed preview binaries. All three APK manifests embed versionName2.0.0/versionCode5007; applicationId com.alarmxv.alarm_xv and the prior release signing certificate are unchanged. Local output dist/2.0.0 with SHA256SUMS.txt. At publication no fresh phone test had been requested. A later owner-authorized installation diagnosis verified fresh install and replacement from GitHub on the Galaxy A34; the owner's earlier downloaded file was corrupt. See [installation evidence](INSTALLATION.md).
 
 | APK | Bytes | SHA256 |
 |---|---:|---|

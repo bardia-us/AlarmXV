@@ -153,3 +153,11 @@
 - Published https://github.com/bardia-us/AlarmXV/releases/tag/v2.0.0 (release424642466). REST latest endpoint confirms tagv2.0.0, draft=false and prerelease=false. This supersedes the earlier pre-release classification; preview3 remains historical.
 - Exactly4assets: arm64-v8a18,983,469B; armeabi-v7a16,501,125B; universal54,881,623B; SHA256SUMS287B. Server digests matched local files before publication.
 - README, release notes, changelog and source promoted together with stable links/version. No new phone installation, UI test or alarm-engine change performed; owner continues device testing.
+
+## Checkpoint18 — download corruption and real installation verification, 2026-10-26
+
+- Owner reported stable APK failed to update or install after their own uninstall, and explicitly asked for testing. Before this test no AlarmXV package was listed. No uninstall/data clear was performed by the agent.
+- Original stable ARM64 APK installed on the Galaxy A34/user0: Success. The owner's existing Downloads APK had the same full byte length but SHA256302e5e33... instead of published cbb13f12... . apksigner failed v2 CHUNKED_SHA256 integrity and ZIP CRC failed libapp.so; file is corrupt, not an ABI mismatch.
+- Independently downloaded the public v2.0.0 ARM64 asset via GitHub CLI; its SHA256 matched published/local cbb13f12..., signature verified, and installing this downloaded file as replacement also returned Success. Device package2.0.0/code5007 confirmed; no Dual App installation.
+- Added a separately named verified copy in phone Downloads (AlarmXV-2.0.0-arm64-v8a-verified.apk), rehashed on device to the correct published digest. Original damaged download not overwritten or deleted.
+- No app source or release artifact replacement needed. Exact transfer/cache/storage corruption source unproven; no browser/VPN blamed. Installation evidence in docs/qa/INSTALLATION.md; local binaries/logs remain ignored under build/install-diagnosis. No alarm/UI/performance test performed.
